@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>白星街道 〜序ノ口から横綱へ〜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== 白星街道 design tokens =====
+   土俵の粘土 / 番付の和紙 / 墨 / 赤房 / 四房カラー */
+:root{
+  --clay:#c29a5e;        /* 土俵 */
+  --clay-deep:#a37e46;
+  --washi:#f8f2e2;       /* 番付紙 */
+  --washi-dim:#efe6cf;
+  --sumi:#211a12;        /* 墨 */
+  --sumi-soft:#4c4234;
+  --akafusa:#a32c22;     /* 赤房 */
+  --aofusa:#2e5e52;      /* 青房 */
+  --kurofusa:#2b2b33;    /* 黒房 */
+  --shirofusa:#8d8570;   /* 白房(灰味) */
+  --gold:#b98a2f;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Zen Kaku Gothic New',sans-serif;
+  color:var(--sumi);
+  background:
+    radial-gradient(circle at 50% -10%, #d8b478 0%, transparent 55%),
+    repeating-linear-gradient(115deg, rgba(0,0,0,.03) 0 2px, transparent 2px 7px),
+    var(--clay);
+  display:flex;justify-content:center;
+  min-height:100dvh;
+}
+#app{width:100%;max-width:480px;padding:12px 12px 40px;display:flex;flex-direction:column;gap:12px}
+
+/* ---- header: 番付札 ---- */
+header{
+  background:var(--sumi);
+  color:var(--washi);
+  border-radius:6px;
+  padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 3px 0 rgba(0,0,0,.25);
+}
+header .fuda{
+  font-family:'Yuji Syuku',serif;
+  font-size:26px;line-height:1;
+  background:var(--washi);color:var(--sumi);
+  padding:8px 10px;border-radius:3px;
+  writing-mode:vertical-rl;letter-spacing:.12em;
+  min-height:96px;display:flex;align-items:center;
+  border-left:4px solid var(--akafusa);
+}
+header .info{text-align:right;font-size:13px;line-height:1.7}
+header .info .name{font-family:'Yuji Syuku',serif;font-size:20px}
+header .info .basho{opacity:.75}
+
+/* ---- panels ---- */
+.panel{
+  background:var(--washi);
+  border-radius:6px;
+  padding:14px;
+  box-shadow:0 2px 0 rgba(0,0,0,.18);
+  border:1px solid rgba(0,0,0,.08);
+}
+h2{
+  font-family:'Yuji Syuku',serif;font-weight:400;
+  font-size:19px;margin-bottom:10px;
+  border-bottom:2px solid var(--sumi);
+  padding-bottom:4px;letter-spacing:.1em;
+}
+h2 small{font-family:'Zen Kaku Gothic New';font-size:12px;color:var(--sumi-soft);letter-spacing:0;float:right;margin-top:6px}
+
+/* ---- stat bars (四房カラー) ---- */
+.stat{display:grid;grid-template-columns:64px 1fr 44px;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+.stat .bar{height:12px;background:var(--washi-dim);border-radius:6px;overflow:hidden;border:1px solid rgba(0,0,0,.12)}
+.stat .bar i{display:block;height:100%;border-radius:6px;transition:width .4s ease}
+.stat .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.c-power i{background:var(--akafusa)}
+.c-tech i{background:var(--aofusa)}
+.c-stam i{background:var(--gold)}
+.c-mental i{background:var(--kurofusa)}
+.meta-row{display:flex;justify-content:space-between;font-size:13px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,0,0,.2)}
+.meta-row b{font-variant-numeric:tabular-nums}
+.weight-hint{font-size:11px;color:var(--sumi-soft)}
+.fatigue-warn{color:var(--akafusa);font-weight:700}
+
+/* ---- option grids ---- */
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.opt{
+  background:var(--washi-dim);
+  border:2px solid transparent;border-radius:6px;
+  padding:10px;cursor:pointer;user-select:none;
+  transition:border-color .15s, background .15s;
+}
+.opt.sel{border-color:var(--akafusa);background:#fff}
+.opt .t{font-weight:700;font-size:14px}
+.opt .d{font-size:11px;color:var(--sumi-soft);line-height:1.5;margin-top:2px}
+.amount-row{display:flex;gap:8px;margin-top:8px}
+.amount-row .opt{flex:1;text-align:center;padding:8px}
+
+/* ---- buttons ---- */
+button.main{
+  width:100%;padding:14px;margin-top:12px;
+  font-family:'Yuji Syuku',serif;font-size:19px;letter-spacing:.2em;
+  background:var(--sumi);color:var(--washi);
+  border:none;border-radius:6px;cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.3);
+}
+button.main:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+button.main:disabled{opacity:.4}
+button.main.aka{background:var(--akafusa)}
+
+/* ---- hoshitori (signature) ---- */
+.hoshitori{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.hoshi{
+  width:26px;height:26px;border-radius:50%;
+  border:2.5px solid var(--sumi);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;background:transparent;
+}
+.hoshi.win{background:#fff;box-shadow:inset 0 0 0 2px #fff}
+.hoshi.lose{background:var(--sumi)}
+.hoshi.next{border-style:dashed;opacity:.5}
+
+/* ---- dohyo stage (animated wrestlers) ---- */
+.dohyo-stage{
+  position:relative;height:180px;margin-bottom:10px;
+  background:linear-gradient(#e3c894 0%, #cfa96c 70%, #b98f52 100%);
+  border-radius:6px;overflow:hidden;border:1px solid rgba(0,0,0,.15);
+}
+.dohyo-stage .ring{
+  position:absolute;left:50%;bottom:10px;width:88%;height:52px;
+  transform:translateX(-50%);
+  border:5px solid #8a6a3a;border-radius:50%;
+  background:rgba(255,252,240,.18);
+  box-shadow:inset 0 3px 6px rgba(0,0,0,.12);
+}
+.dohyo-stage .shikirisen{
+  position:absolute;left:50%;bottom:26px;width:3px;height:22px;
+  transform:translateX(-50%);background:rgba(255,255,255,.65);border-radius:2px;
+}
+.wrestler{
+  position:absolute;bottom:30px;width:78px;
+  transform-origin:50% 92%;
+  transition:left .55s cubic-bezier(.3,1.4,.4,1), transform .55s cubic-bezier(.3,1.4,.4,1);
+  will-change:left,transform;
+}
+.wrestler svg{width:100%;height:auto;display:block;filter:drop-shadow(0 4px 3px rgba(0,0,0,.22))}
+.wrestler.flip svg{transform:scaleX(-1)}
+.wrestler.fallen{transition:left .45s ease-in, transform .45s ease-in}
+.wrestler .breath{animation:breathe 1.6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(2.5px)}}
+@media (prefers-reduced-motion: reduce){
+  .wrestler{transition:none}
+  .wrestler .breath{animation:none}
+}
+
+/* ---- training animations ---- */
+.teppo-pole{
+  position:absolute;left:64%;bottom:24px;width:13px;height:130px;
+  background:linear-gradient(90deg,#93713e,#6f5330);border-radius:4px;
+  box-shadow:2px 3px 4px rgba(0,0,0,.2);
+}
+.train-caption{
+  position:absolute;top:8px;left:0;right:0;text-align:center;
+  font-family:'Yuji Syuku',serif;font-size:16px;letter-spacing:.15em;color:#4a3a24;
+}
+.mover{transform-origin:50% 92%}
+@keyframes a-shiko{
+  0%,45%,100%{transform:rotate(0) translateY(0)}
+  12%{transform:rotate(-16deg) translateY(-12px)}
+  22%{transform:rotate(-3deg) translateY(3px)}
+  57%{transform:rotate(16deg) translateY(-12px)}
+  67%{transform:rotate(3deg) translateY(3px)}
+}
+.anim-shiko{animation:a-shiko 1.6s ease-in-out infinite}
+@keyframes a-teppo{
+  0%,100%{transform:translateX(0) rotate(0)}
+  20%{transform:translateX(16px) rotate(3deg)}
+  35%{transform:translateX(-2px) rotate(0)}
+  55%{transform:translateX(16px) rotate(3deg)}
+  70%{transform:translateX(-2px) rotate(0)}
+}
+.anim-teppo{animation:a-teppo 1.1s ease-in-out infinite}
+@keyframes a-lean{0%,100%{transform:rotate(2deg)}50%{transform:rotate(10deg) translateX(5px)}}
+.anim-butsukari{animation:a-lean 1.2s ease-in-out infinite}
+@keyframes a-moshiai{0%,100%{transform:rotate(0) translateX(0)}25%{transform:rotate(3deg) translateX(4px)}75%{transform:rotate(-2deg) translateX(-3px)}}
+.anim-moshiai{animation:a-moshiai .9s ease-in-out infinite}
+.anim-moshiai-r{animation:a-moshiai .9s ease-in-out infinite reverse}
+@keyframes a-crouch{0%,100%{transform:translateY(8px)}50%{transform:translateY(11px)}}
+.anim-suriashi{animation:a-crouch .8s linear infinite}
+@keyframes a-rest{0%{transform:rotate(0)}35%,100%{transform:rotate(86deg) translateX(-14px) translateY(6px)}}
+.anim-rest{animation:a-rest 2.2s ease forwards}
+@keyframes k-dash{0%,100%{left:30%}40%{left:57%}55%{left:53%}}
+.t-dash{animation:k-dash 1.2s ease-in-out infinite}
+@keyframes k-slide{0%,100%{left:30%}50%{left:70%}}
+.t-slide{animation:k-slide 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){
+  .mover,.t-dash,.t-slide{animation:none !important}
+}
+
+/* ---- eating scene ---- */
+.eat-stage{
+  position:relative;height:180px;margin-bottom:10px;overflow:hidden;
+  background:linear-gradient(#f0e0c0 0%,#e2caa0 62%,#c9a978 62%,#b8955f 100%);
+  border-radius:6px;border:1px solid rgba(0,0,0,.15);
+}
+.eat-table{position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(#8a6134,#6d4a26)}
+.nabe{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);width:132px}
+.steam{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);width:120px;height:60px;pointer-events:none}
+.steam span{
+  position:absolute;bottom:0;width:13px;height:13px;border-radius:50%;
+  background:rgba(255,255,255,.62);filter:blur(3px);
+  animation:rise 2.4s ease-out infinite;
+}
+@keyframes rise{
+  0%{transform:translateY(0) scale(.5);opacity:0}
+  25%{opacity:.85}
+  100%{transform:translateY(-58px) scale(1.9);opacity:0}
+}
+.eater{position:absolute;left:16%;bottom:14px;width:96px;transform-origin:50% 92%}
+.eater .head-grp{transform-origin:60px 30px;animation:eat-lean 1.68s ease-in-out infinite}
+@keyframes eat-lean{
+  0%,100%{transform:rotate(0) translate(0,0)}
+  30%{transform:rotate(15deg) translate(9px,10px)}   /* 器に顔を寄せる */
+  50%{transform:rotate(11deg) translate(6px,7px)}
+  70%{transform:rotate(2deg) translate(1px,1px)}
+}
+.eater .jaw{animation:chew 0.34s ease-in-out infinite}
+@keyframes chew{0%,100%{transform:translateY(0)}50%{transform:translateY(1.6px)}}
+.eater .belly{animation:belly 3.2s ease-out infinite}
+@keyframes belly{0%{transform:scale(1)}100%{transform:scale(1.055)}}
+.bowl-arm{transform-origin:24px 12px;animation:bowl-lift 1.68s ease-in-out infinite}
+@keyframes bowl-lift{
+  0%,100%{transform:translate(0,0)}
+  30%{transform:translate(-7px,-9px)}
+  60%{transform:translate(-3px,-4px)}
+}
+.eat-caption{
+  position:absolute;top:8px;left:0;right:0;text-align:center;
+  font-family:'Yuji Syuku',serif;font-size:16px;letter-spacing:.15em;color:#4a3a24;
+}
+@media (prefers-reduced-motion: reduce){
+  .steam span,.eater .head-grp,.eater .jaw,.eater .belly,.bowl-arm{animation:none}
+}
+
+/* ---- event card ---- */
+.event-card{
+  background:linear-gradient(#fffdf6,#f4ead2);
+  border:2px solid var(--sumi);
+  border-radius:6px;padding:18px 16px;
+  position:relative;overflow:hidden;
+  animation:evIn .5s cubic-bezier(.2,1.3,.4,1);
+}
+@keyframes evIn{from{opacity:0;transform:scale(.92) translateY(14px)}to{opacity:1;transform:none}}
+.event-card::before{
+  content:"";position:absolute;inset:5px;border:1px solid rgba(163,44,34,.28);
+  border-radius:3px;pointer-events:none;
+}
+.ev-icon{
+  width:52px;height:52px;margin:0 auto 8px;border-radius:50%;
+  background:var(--akafusa);color:var(--washi);
+  font-family:'Yuji Syuku',serif;font-size:26px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 0 rgba(0,0,0,.2);
+}
+.ev-title{
+  font-family:'Yuji Syuku',serif;font-size:21px;text-align:center;
+  letter-spacing:.12em;margin-bottom:10px;
+}
+.ev-text{font-size:14px;line-height:2;text-align:justify}
+.ev-gain{
+  margin-top:12px;padding:8px;text-align:center;
+  background:var(--washi-dim);border-radius:4px;
+  font-weight:700;font-size:14px;color:var(--akafusa);
+}
+.sakura{position:absolute;top:-12px;font-size:13px;color:#e79bb2;animation:fall 3.4s linear infinite;pointer-events:none}
+@keyframes fall{
+  0%{transform:translateY(-20px) rotate(0);opacity:0}
+  15%{opacity:1}
+  100%{transform:translateY(300px) rotate(360deg);opacity:0}
+}
+@media (prefers-reduced-motion: reduce){.event-card{animation:none}.sakura{display:none}}
+
+/* ---- sound toggle ---- */
+#sound-btn{
+  position:fixed;top:10px;right:10px;z-index:50;
+  width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--sumi);color:var(--washi);font-size:16px;
+  box-shadow:0 2px 0 rgba(0,0,0,.3);
+}
+
+/* ---- battle log ---- */
+.blog{font-size:13px;line-height:1.9;margin-top:10px;max-height:240px;overflow-y:auto}
+.blog p{opacity:0;animation:pop .35s forwards}
+.blog p.kimarite{font-family:'Yuji Syuku',serif;font-size:17px;margin-top:6px}
+.blog p.winline{font-weight:700;color:var(--akafusa)}
+@keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.blog p{animation:none;opacity:1}.stat .bar i{transition:none}}
+
+.opp-card{display:flex;justify-content:space-between;align-items:center;background:var(--washi-dim);border-radius:6px;padding:10px 12px;margin-bottom:10px}
+.opp-card .oname{font-family:'Yuji Syuku',serif;font-size:20px}
+.opp-card .odesc{font-size:11px;color:var(--sumi-soft);text-align:right;line-height:1.6}
+
+.result-big{font-family:'Yuji Syuku',serif;font-size:30px;text-align:center;margin:10px 0;letter-spacing:.15em}
+.result-note{text-align:center;font-size:13px;color:var(--sumi-soft);line-height:1.8}
+.promo{color:var(--akafusa);font-weight:700}
+.yusho-banner{
+  text-align:center;font-family:'Yuji Syuku',serif;font-size:16px;
+  color:var(--gold);letter-spacing:.3em;margin-top:6px;
+}
+footer{text-align:center;font-size:10px;color:rgba(33,26,18,.5);margin-top:4px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   白星街道 〜序ノ口から横綱へ〜  prototype v0.4
+   single-file / vanilla JS / in-memory state
+   ========================================================= */
+
+// ---------- audio (Web Audio API / 合成音・外部ファイル不要) ----------
+const Sfx = (()=>{
+  let ctx = null, on = true;
+  const ac = ()=>{
+    if(!ctx){ const C = window.AudioContext||window.webkitAudioContext; if(!C) return null; ctx = new C(); }
+    if(ctx.state==="suspended") ctx.resume();
+    return ctx;
+  };
+  function tone(freq, dur, type="sine", vol=0.25, slideTo=null, delay=0){
+    const c = ac(); if(!c||!on) return;
+    const t0 = c.currentTime + delay;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t0);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo), t0+dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0+dur+0.05);
+  }
+  function noise(dur, vol=0.3, filterFreq=1200, delay=0, q=1){
+    const c = ac(); if(!c||!on) return;
+    const t0 = c.currentTime + delay;
+    const n = Math.floor(c.sampleRate*dur);
+    const buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i] = (Math.random()*2-1) * (1-i/n);
+    const src = c.createBufferSource(); src.buffer = buf;
+    const f = c.createBiquadFilter(); f.type="lowpass"; f.frequency.value=filterFreq; f.Q.value=q;
+    const g = c.createGain();
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    src.connect(f); f.connect(g); g.connect(c.destination); src.start(t0);
+  }
+  return {
+    toggle(){ on = !on; if(on) tone(880,0.08,"sine",0.2); return on; },
+    isOn(){ return on; },
+    tap(){ tone(660,0.05,"triangle",0.14); },
+    // 太鼓（櫓太鼓）
+    taiko(delay=0, vol=0.45){ tone(78,0.34,"sine",vol,42,delay); noise(0.09,vol*0.5,420,delay); },
+    // 拍子木
+    ki(delay=0){ noise(0.05,0.4,5200,delay,6); tone(2100,0.05,"square",0.12,1500,delay); },
+    // 立合いの激突
+    clash(delay=0){ noise(0.22,0.55,760,delay); tone(120,0.2,"sawtooth",0.28,50,delay); },
+    // 押し合い（肉と肉）
+    push(delay=0){ noise(0.11,0.24,540,delay); },
+    // 倒れる
+    fall(delay=0){ noise(0.4,0.5,300,delay); tone(90,0.36,"sine",0.3,38,delay); },
+    // 歓声
+    cheer(delay=0, len=1.5, vol=0.22){
+      const c=ac(); if(!c||!on) return;
+      const t0=c.currentTime+delay, n=Math.floor(c.sampleRate*len);
+      const buf=c.createBuffer(1,n,c.sampleRate), d=buf.getChannelData(0);
+      for(let i=0;i<n;i++){ const env=Math.min(1,i/(n*0.12))*Math.max(0,1-i/n); d[i]=(Math.random()*2-1)*env; }
+      const src=c.createBufferSource(); src.buffer=buf;
+      const f=c.createBiquadFilter(); f.type="bandpass"; f.frequency.value=1000; f.Q.value=0.7;
+      const g=c.createGain(); g.gain.value=vol;
+      src.connect(f); f.connect(g); g.connect(c.destination); src.start(t0);
+    },
+    // 四股の踏み下ろし
+    stomp(delay=0){ tone(64,0.22,"sine",0.32,34,delay); noise(0.08,0.22,340,delay); },
+    // 鉄砲（突っ張り）
+    slap(delay=0){ noise(0.07,0.3,2400,delay,3); },
+    // 食べる（すすり込み＋咀嚼）
+    slurp(delay=0){ tone(300,0.16,"sine",0.1,620,delay); noise(0.13,0.14,900,delay); },
+    chew(delay=0){ noise(0.06,0.16,700,delay,2); },
+    // 鍋のぐつぐつ
+    boil(delay=0){ for(let i=0;i<5;i++) noise(0.05,0.07,480,delay+i*0.17,2); },
+    // ステータス上昇
+    gain(delay=0){ [523,659,784].forEach((f,i)=>tone(f,0.16,"triangle",0.18,null,delay+i*0.07)); },
+    // 昇進ファンファーレ
+    fanfare(){ [523,659,784,1046].forEach((f,i)=>tone(f,0.4,"square",0.16,null,i*0.14)); this.taiko(0,0.4); this.cheer(0.2,2.2,0.2); },
+    // 降格・凶事
+    sad(){ [440,392,330,262].forEach((f,i)=>tone(f,0.42,"sine",0.2,null,i*0.16)); },
+    // イベント（慶事）
+    event(){ [659,880,1046].forEach((f,i)=>tone(f,0.3,"triangle",0.16,null,i*0.1)); this.ki(0); },
+    // 結婚（祝言）
+    wedding(){ [523,587,659,784,880,1046].forEach((f,i)=>tone(f,0.5,"sine",0.15,null,i*0.16)); this.cheer(0.4,2.4,0.18); this.ki(0); this.ki(0.12); },
+  };
+})();
+
+// ---------- constants ----------
+const RANKS = ["序ノ口","序二段","三段目","幕下","十両","前頭","小結","関脇","大関","横綱"];
+const DIV_BASE = [32, 46, 60, 76, 92, 106, 116, 124, 132, 142]; // 相手力士の平均ステ
+const STAT_CAP = 200;
+const TRAIN_DAYS = 10;
+
+const TRAININGS = {
+  shiko:    {label:"四股",       desc:"筋力+2 気合+1 / 疲労+10 体重-0.8", gain:{power:2, mental:1, stamina:1}, fatigue:10, burn:0.8},
+  teppo:    {label:"鉄砲",       desc:"筋力+3 技+1 / 疲労+12 体重-0.6",   gain:{power:3, tech:1},              fatigue:12, burn:0.6},
+  butsukari:{label:"ぶつかり稽古", desc:"体力+3 気合+2 / 疲労+20 体重-1.5", gain:{stamina:3, mental:2, power:1}, fatigue:20, burn:1.5},
+  moshiai:  {label:"申し合い",    desc:"技+3 気合+2 / 疲労+15 体重-1.0",   gain:{tech:3, mental:2},             fatigue:15, burn:1.0},
+  suriashi: {label:"すり足",      desc:"技+2 体力+2 / 疲労+8 体重-1.2",    gain:{tech:2, stamina:2},            fatigue:8,  burn:1.2},
+  rest:     {label:"休養",       desc:"疲労-35 体重+1.0",                gain:{},                             fatigue:-35, burn:-1.0},
+};
+
+const CHANKO = {
+  meat: {label:"肉ちゃんこ", desc:"体重++ 筋力+1",          gain:{power:1}, weight:1.6},
+  fish: {label:"魚ちゃんこ", desc:"体重+ 技+1",             gain:{tech:1},  weight:0.9},
+  veg:  {label:"野菜ちゃんこ",desc:"体重± スタミナ+1 疲労-5", gain:{stamina:1}, weight:0.3, fatigue:-5},
+};
+const AMOUNTS = {
+  light:{label:"控えめ", wMul:0.4, gMul:0.7},
+  normal:{label:"普通",  wMul:1.0, gMul:1.0},
+  big:  {label:"大盛り", wMul:2.2, gMul:1.3},
+};
+
+const TACTICS = {
+  oshi: {label:"押し",   desc:"筋力で圧す。四つに有利"},
+  yotsu:{label:"四つ",   desc:"組んで技で崩す。変化に有利"},
+  henka:{label:"変化",   desc:"立合いで飛ぶ大博打。押しに有利"},
+};
+// 三すくみ: 押し>四つ>変化>押し
+const TACTIC_MOD = {
+  oshi: {oshi:1.0, yotsu:1.15, henka:0.85},
+  yotsu:{oshi:0.85, yotsu:1.0, henka:1.15},
+  henka:{oshi:1.15, yotsu:0.85, henka:1.0},
+};
+const KIMARITE = {
+  oshi: ["押し出し","突き出し","突き倒し","押し倒し"],
+  yotsu:["寄り切り","上手投げ","下手投げ","寄り倒し"],
+  henka:["叩き込み","引き落とし","肩透かし"],
+};
+
+const NAME_A = ["嵐","若","大","琴","照","武","朝","豊","霧","玉"];
+const NAME_B = ["ノ里","嶽","富士","錦","櫻","雷","洋","風","國","海"];
+
+// ---------- 人生イベント ----------
+// cond: 発生条件 / once:一度きり / weight:抽選重み / apply:効果
+const EVENTS = [
+  { id:"okamisan", title:"若おかみとの出会い", once:true, weight:10,
+    cond:s=> s.rikishi.rank>=4 && s.bashoCount>=3,
+    icon:"❀",
+    text:s=>`ちゃんこ屋の常連客に、後援会長の姪だという娘がいた。${s.rikishi.name}が負けた日も、彼女は同じ顔で「おかわりは」と聞く。名を、しづ、といった。`,
+    effect:s=>{ s.flags.metWife = true; s.rikishi.mental = clamp(s.rikishi.mental+6,0,STAT_CAP); return "気合 +6"; },
+    sfx:"event" },
+
+  { id:"kekkon", title:"結婚 ―― 祝言", once:true, weight:100,
+    cond:s=> s.flags.metWife && s.rikishi.rank>=5,
+    icon:"❁",
+    text:s=>`関取となった${s.rikishi.name}は、しづを娶った。祝言の席で親方が言う。「所帯を持つと、力士は強くなる。守るもんができるからな」。以後、支度部屋に握り飯が届くようになった。`,
+    effect:s=>{ s.flags.married = true; s.rikishi.mental = clamp(s.rikishi.mental+18,0,STAT_CAP); return "気合 +18／以後、毎日の疲労回復が向上"; },
+    sfx:"wedding" },
+
+  { id:"kodomo", title:"長男誕生", once:true, weight:80,
+    cond:s=> s.flags.married && s.bashoCount>=8,
+    icon:"◍",
+    text:s=>`朝稽古の最中に報せが来た。母子ともに健康。${s.rikishi.name}は四股を踏む足を止めず、ただ一度だけ、深く息を吐いた。`,
+    effect:s=>{ s.rikishi.mental = clamp(s.rikishi.mental+14,0,STAT_CAP); s.rikishi.fatigue=clamp(s.rikishi.fatigue-15,0,100); return "気合 +14／疲労 -15"; },
+    sfx:"event" },
+
+  { id:"tanimachi", title:"タニマチがついた", once:false, weight:22,
+    cond:s=> s.rikishi.rank>=3,
+    icon:"金",
+    text:s=>`地元の後援会長が支度部屋に現れ、分厚い封筒を置いていった。「ちゃんこの肉を、いいのに替えなさい」。`,
+    effect:s=>{ s.rikishi.weight = fmt1(clamp(s.rikishi.weight+1.5,80,250)); s.rikishi.power = clamp(s.rikishi.power+5,0,STAT_CAP); return "筋力 +5／体重 +1.5kg"; },
+    sfx:"event" },
+
+  { id:"oyakata", title:"親方の説教", once:false, weight:18,
+    cond:s=> s.rikishi.fatigue>=55,
+    icon:"喝",
+    text:s=>`「稽古は嘘をつかんが、身体も嘘をつかん」。親方は${s.rikishi.name}を土俵の外に座らせ、一日、他人の相撲だけを見せた。`,
+    effect:s=>{ s.rikishi.fatigue = clamp(s.rikishi.fatigue-30,0,100); s.rikishi.tech = clamp(s.rikishi.tech+6,0,STAT_CAP); return "疲労 -30／技 +6"; },
+    sfx:"event" },
+
+  { id:"raibaru", title:"好敵手あらわる", once:true, weight:30,
+    cond:s=> s.rikishi.rank>=2 && s.bashoCount>=4,
+    icon:"敵",
+    text:s=>`出稽古先に、同じ年の力士がいた。三十番取って、二十三番負けた。帰りの電車で、${s.rikishi.name}は初めて悔しさで眠れなかった。`,
+    effect:s=>{ s.rikishi.mental=clamp(s.rikishi.mental+10,0,STAT_CAP); s.rikishi.tech=clamp(s.rikishi.tech+8,0,STAT_CAP); return "気合 +10／技 +8"; },
+    sfx:"event" },
+
+  { id:"kega", title:"膝を痛めた", once:false, weight:16,
+    cond:s=> s.rikishi.fatigue>=65 && s.rikishi.weight>=175,
+    icon:"痛",
+    text:s=>`ぶつかり稽古の途中、右膝に鈍い音が走った。医者は「体重を落とせ」とだけ言った。`,
+    effect:s=>{ s.rikishi.power=clamp(s.rikishi.power-8,0,STAT_CAP); s.rikishi.stamina=clamp(s.rikishi.stamina-6,0,STAT_CAP); return "筋力 -8／スタミナ -6"; },
+    sfx:"sad" },
+
+  { id:"chikara", title:"化粧廻しの贈呈", once:true, weight:60,
+    cond:s=> s.rikishi.rank>=4,
+    icon:"錦",
+    text:s=>`後援会から化粧廻しが贈られた。金糸で織られた昇り龍。土俵入りで初めてそれを締めたとき、客席がどよめいた。`,
+    effect:s=>{ s.rikishi.mental=clamp(s.rikishi.mental+12,0,STAT_CAP); return "気合 +12"; },
+    sfx:"event" },
+
+  { id:"deshi", title:"付け人がついた", once:true, weight:70,
+    cond:s=> s.rikishi.rank>=4,
+    icon:"従",
+    text:s=>`関取昇進とともに、序ノ口の若い衆が付け人についた。荷物を持たれるのは、どうにも尻の据わりが悪い。`,
+    effect:s=>{ s.rikishi.fatigue=clamp(s.rikishi.fatigue-20,0,100); s.rikishi.mental=clamp(s.rikishi.mental+8,0,STAT_CAP); return "疲労 -20／気合 +8"; },
+    sfx:"event" },
+
+  { id:"jungyo", title:"地方巡業", once:false, weight:20,
+    cond:s=> s.rikishi.rank>=4,
+    icon:"旅",
+    text:s=>`巡業で全国を回った。子どもたちに稽古をつけ、握手をし、写真に写る。疲れはしたが、相撲が誰のものかを思い出した。`,
+    effect:s=>{ s.rikishi.mental=clamp(s.rikishi.mental+10,0,STAT_CAP); s.rikishi.fatigue=clamp(s.rikishi.fatigue+10,0,100); s.rikishi.tech=clamp(s.rikishi.tech+5,0,STAT_CAP); return "気合 +10／技 +5／疲労 +10"; },
+    sfx:"event" },
+
+  { id:"haha", title:"故郷からの便り", once:false, weight:14,
+    cond:s=> s.bashoCount>=2,
+    icon:"文",
+    text:s=>`母から手紙が届いた。畑のこと、犬のこと、近所の誰それのこと。相撲のことは、最後の一行だけだった。「無理はせんように」。`,
+    effect:s=>{ s.rikishi.mental=clamp(s.rikishi.mental+9,0,STAT_CAP); s.rikishi.fatigue=clamp(s.rikishi.fatigue-10,0,100); return "気合 +9／疲労 -10"; },
+    sfx:"event" },
+];
+
+function rollEvent(){
+  const pool = EVENTS.filter(e=>{
+    if(e.once && state.flags.fired[e.id]) return false;
+    return e.cond(state);
+  });
+  if(!pool.length) return null;
+  const total = pool.reduce((s,e)=>s+e.weight,0);
+  let r = Math.random()*total;
+  for(const e of pool){ r -= e.weight; if(r<=0) return e; }
+  return pool[0];
+}
+
+
+// ---------- state ----------
+let state = null;
+function newGame(){
+  state = {
+    phase:"training",          // training | basho | boutResult | bashoResult | yokozuna
+    day:1,
+    bashoCount:1,
+    sel:{train:null, chanko:null, amount:"normal", tactic:null},
+    rikishi:{
+      name:"けん昇龍", rank:0,
+      power:40, tech:30, stamina:50, mental:40,
+      weight:112, fatigue:0,
+      kadoban:false,
+    },
+    basho:null,
+    history:[],                // {rankIdx, wins, losses}
+    lastLog:[],
+    finalLog:null,
+    lastAnim:null,
+    animDone:true,
+    pendingDay:null,
+    resultMsg:null,
+    flags:{ fired:{}, married:false, metWife:false, eventThisBasho:false },
+    curEvent:null,
+    eventGain:null,
+  };
+  render();
+}
+
+// ---------- helpers ----------
+const rnd = (a,b)=>a+Math.random()*(b-a);
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const fmt1 = v=>Math.round(v*10)/10;
+
+function weightMod(w){
+  if(w>=140 && w<=170) return 1 + (1-Math.abs(w-155)/15)*0.05;
+  const over = w>170 ? w-170 : 140-w;
+  return Math.max(0.75, 1-over*0.004);
+}
+function weightHint(w){
+  if(w<130) return "軽量。当たり負けしやすい";
+  if(w<140) return "やや軽い";
+  if(w<=170) return "適正体重。動ける身体だ";
+  if(w<=190) return "重い。スタミナ消費に注意";
+  return "重すぎる。息が上がる";
+}
+
+function applyGain(r, gains, mul=1){
+  for(const k in gains){
+    const soft = 1 - r[k]/250;                 // 成長逓減
+    r[k] = clamp(r[k] + gains[k]*mul*Math.max(0.2,soft), 0, STAT_CAP);
+  }
+}
+
+// ---------- training phase ----------
+function endDay(){
+  const s = state.sel;
+  if(!s.train || !s.chanko) return;
+  state.pendingDay = {train:s.train, chanko:s.chanko, amount:s.amount};
+  state.phase = "trainAnim";
+  render();
+  playTrainSfx(s.train);
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ goEat(); return; }
+  state._trainTimer = setTimeout(goEat, 2800);
+}
+
+function playTrainSfx(kind){
+  if(kind==="shiko")          [0,0.55,1.1,1.65,2.2].forEach(d=>Sfx.stomp(d));
+  else if(kind==="teppo")     { for(let i=0;i<12;i++) Sfx.slap(i*0.22); }
+  else if(kind==="butsukari") [0,0.6,1.2,1.8,2.4].forEach(d=>{Sfx.clash(d);Sfx.push(d+0.2);});
+  else if(kind==="moshiai")   { for(let i=0;i<8;i++) Sfx.push(i*0.32); }
+  else if(kind==="suriashi")  [0,0.4,0.8,1.2,1.6,2.0,2.4].forEach(d=>Sfx.push(d));
+}
+
+// --- 第2幕：ちゃんこを食べる ---
+function goEat(){
+  clearTimeout(state._trainTimer);
+  if(state.phase!=="trainAnim") return;
+  state.phase = "eatAnim";
+  render();
+  const amt = state.pendingDay.amount;
+  const bites = amt==="big" ? 7 : amt==="light" ? 3 : 5;
+  Sfx.boil(0);
+  for(let i=0;i<bites;i++){ Sfx.slurp(0.3+i*0.42); Sfx.chew(0.48+i*0.42); }
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ applyDay(); return; }
+  state._eatTimer = setTimeout(applyDay, 900 + bites*440);
+}
+
+function applyDay(){
+  clearTimeout(state._trainTimer); clearTimeout(state._eatTimer);
+  if(state.phase!=="trainAnim" && state.phase!=="eatAnim") return;
+  const p = state.pendingDay, r = state.rikishi;
+
+  const tr = TRAININGS[p.train];
+  const tired = r.fatigue >= 70;
+  applyGain(r, tr.gain, tired?0.5:1);          // 疲労70+で成長半減
+  r.fatigue = clamp(r.fatigue + tr.fatigue, 0, 100);
+  if(tr.burn) r.weight = fmt1(clamp(r.weight - tr.burn, 80, 250));
+  let injuryNote = "";
+  if(tired && tr.fatigue>12 && Math.random()<0.25){
+    r.power=clamp(r.power-2,0,STAT_CAP); r.stamina=clamp(r.stamina-2,0,STAT_CAP);
+    injuryNote = "無理がたたって軽い怪我…筋力とスタミナが落ちた。";
+  }
+
+  const ch = CHANKO[p.chanko], am = AMOUNTS[p.amount];
+  applyGain(r, ch.gain, am.gMul);
+  r.weight = fmt1(clamp(r.weight + ch.weight*am.wMul, 80, 250));
+  if(ch.fatigue) r.fatigue = clamp(r.fatigue + ch.fatigue, 0, 100);
+  if(state.flags.married) r.fatigue = clamp(r.fatigue-3, 0, 100);   // 所帯持ちの回復ボーナス
+
+  state.resultMsg = injuryNote || null;
+  state.sel.train = null; state.sel.chanko = null; state.sel.amount = "normal";
+  state.pendingDay = null;
+  state.day++;
+  Sfx.gain();
+
+  // --- イベント抽選（1場所につき1回まで） ---
+  if(!state.flags.eventThisBasho && Math.random()<0.32){
+    const ev = rollEvent();
+    if(ev){ state.flags.eventThisBasho = true; triggerEvent(ev); return; }
+  }
+  if(state.day > TRAIN_DAYS) startBasho();
+  else state.phase = "training";
+  render();
+}
+
+function triggerEvent(ev){
+  state.flags.fired[ev.id] = true;
+  state.eventGain = ev.effect(state);
+  state.curEvent = ev;
+  state.phase = "event";
+  (Sfx[ev.sfx] || Sfx.event).call(Sfx);
+  render();
+}
+
+function closeEvent(){
+  state.curEvent = null; state.eventGain = null;
+  if(state.day > TRAIN_DAYS) startBasho();
+  else state.phase = "training";
+  render();
+}
+
+// ---------- basho ----------
+function boutsFor(rankIdx){ return rankIdx>=4 ? 15 : 7; }
+
+function makeOpponent(rankIdx, i, total){
+  const base = DIV_BASE[rankIdx];
+  const scale = 0.86 + (i/(total-1))*0.26;     // 終盤ほど強敵
+  const v = ()=> clamp(base*scale*rnd(0.88,1.12), 10, STAT_CAP);
+  return {
+    name: NAME_A[Math.floor(Math.random()*10)] + NAME_B[Math.floor(Math.random()*10)],
+    power:v(), tech:v(), stamina:v(), mental:v(),
+    weight: Math.round(rnd(115,185)),
+  };
+}
+
+function startBasho(){
+  const r = state.rikishi;
+  const n = boutsFor(r.rank);
+  state.basho = {
+    bouts: Array.from({length:n},(_,i)=>makeOpponent(r.rank,i,n)),
+    idx:0, wins:0, losses:0, results:[],
+  };
+  state.phase = "basho";
+  state.sel.tactic = null;
+}
+
+function battlePower(f, tactic, oppTactic, stamRatio, cond){
+  const base = f.power*0.45 + f.tech*0.35 + f.mental*0.20;
+  const sMod = 0.6 + 0.4*Math.max(0,stamRatio);
+  return base * weightMod(f.weight) * TACTIC_MOD[tactic][oppTactic] * sMod * cond * rnd(0.85,1.15);
+}
+
+function oppTacticFor(o){
+  const roll = Math.random();
+  if(o.power > o.tech+15) return roll<0.65?"oshi":(roll<0.9?"yotsu":"henka");
+  if(o.tech > o.power+15) return roll<0.65?"yotsu":(roll<0.9?"oshi":"henka");
+  return roll<0.42?"oshi":(roll<0.86?"yotsu":"henka");
+}
+
+function fightBout(pTactic){
+  const r = state.rikishi, b = state.basho;
+  const opp = b.bouts[b.idx];
+  const oTactic = oppTacticFor(opp);
+  const log = [];
+  const cond = 1 - r.fatigue/250;
+
+  log.push(`東 ${r.name} 対 西 ${opp.name}。`);
+  log.push(`${r.name}は「${TACTICS[pTactic].label}」、${opp.name}は「${TACTICS[oTactic].label}」の構え。`);
+
+  let momentum = 0;
+  let pPool = r.stamina, oPool = opp.stamina;
+  const pDrain = 12 + Math.max(0,(r.weight-170)*0.2);
+  const oDrain = 12 + Math.max(0,(opp.weight-170)*0.2);
+
+  // --- 立合い ---
+  log.push("時間いっぱい――はっけよい、のこった！");
+  let pT = battlePower(r,pTactic,oTactic,1,cond) + r.weight*0.12;
+  let oT = battlePower(opp,oTactic,pTactic,1,1)  + opp.weight*0.12;
+
+  // 変化の博打処理
+  const henkaRoll = (f,mine,theirs)=>{
+    if(mine!=="henka") return 0;
+    const chance = 0.35 + f.mental/400 + (theirs==="oshi"?0.15:0);
+    return Math.random()<chance ? 60 : -50;
+  };
+  const pH = henkaRoll(r,pTactic,oTactic), oH = henkaRoll(opp,oTactic,pTactic);
+  if(pTactic==="henka") log.push(pH>0?`${r.name}、立合いで鮮やかに変化！`:`${r.name}の変化、読まれた！体勢を崩す！`);
+  if(oTactic==="henka") log.push(oH>0?`${opp.name}が変化！${r.name}、泳がされる！`:`${opp.name}の変化を見切った！`);
+  momentum += (pT-oT)*1.2 + pH - oH;
+  const moms = [momentum];                     // アニメ用モメンタム履歴
+
+  // --- 攻防 ---
+  const PHRASES_ADV = ["じりじりと前に出る","強烈な突き放し","右を差して一気に","土俵際まで攻め立てる"];
+  const PHRASES_DIS = ["押し込まれる","上手を取られ苦しい","土俵際に詰まる","残すのがやっと"];
+  let decided = 0; // 1 win / -1 lose
+  for(let ex=0; ex<6 && !decided; ex++){
+    pPool -= pDrain; oPool -= oDrain;
+    const pa = battlePower(r,pTactic,oTactic, pPool/Math.max(1,r.stamina), cond);
+    const oa = battlePower(opp,oTactic,pTactic, oPool/Math.max(1,opp.stamina), 1);
+    momentum += (pa-oa);
+    moms.push(momentum);
+    if(ex%2===0){
+      log.push(momentum>=0
+        ? `${r.name}、${PHRASES_ADV[Math.floor(Math.random()*4)]}！`
+        : `${r.name}、${PHRASES_DIS[Math.floor(Math.random()*4)]}…！`);
+    }
+    if(momentum>45) decided=1;
+    if(momentum<-45) decided=-1;
+  }
+  if(!decided) decided = momentum>0?1:(momentum<0?-1:(r.stamina>=opp.stamina?1:-1));
+
+  const winnerTactic = decided===1?pTactic:oTactic;
+  const kimarite = KIMARITE[winnerTactic][Math.floor(Math.random()*KIMARITE[winnerTactic].length)];
+  const winner = decided===1?r.name:opp.name;
+  state.finalLog = [
+    `決まり手は「${kimarite}」！`,
+    {win:true, text:`${winner}の勝ち！！`},
+  ];
+
+  if(decided===1){ b.wins++; b.results.push(1);} else { b.losses++; b.results.push(0);}
+  r.fatigue = clamp(r.fatigue+3,0,100);
+  state.lastLog = log;
+  state.animDone = false;
+  state.lastAnim = {
+    moms,
+    playerWon: decided===1,
+    henkaFinish: winnerTactic==="henka",
+    oppWeight: opp.weight,
+  };
+  state.phase = "boutResult";
+  render();
+  animateBout();
+}
+
+function nextBout(){
+  const b = state.basho;
+  b.idx++;
+  state.sel.tactic = null;
+  if(b.idx >= b.bouts.length){ finishBasho(); }
+  else { state.phase="basho"; render(); }
+}
+
+// ---------- banzuke ----------
+function finishBasho(){
+  const r = state.rikishi, b = state.basho;
+  const n = b.bouts.length, w = b.wins;
+  const kachikoshi = w > n-w;
+  state.history.push({rankIdx:r.rank, wins:w, losses:n-w});
+
+  let msg = "", promo = 0;
+  const idx = r.rank;
+  if(idx<=2){                       // 序ノ口〜三段目
+    if(kachikoshi) promo=1; else if(idx>0 && w<=2) promo=-1;
+  } else if(idx===3){               // 幕下
+    if(w>=5) promo=1; else if(w<=2) promo=-1;
+  } else if(idx===4){               // 十両
+    if(w>=9) promo=1; else if(!kachikoshi) promo=-1;
+  } else if(idx===5){               // 前頭
+    if(w>=10) promo=1; else if(!kachikoshi) promo=-1;
+  } else if(idx===6){               // 小結
+    if(kachikoshi) promo=1; else promo=-1;
+  } else if(idx===7){               // 関脇 → 大関: 三役直近3場所33勝 or 13勝の大暴れ
+    const recent = state.history.slice(-3).filter(h=>h.rankIdx>=6);
+    const total = recent.length===3 ? recent.reduce((s,h)=>s+h.wins,0) : 0;
+    const prevOk = state.history.length>=2 && state.history[state.history.length-2].wins > 7;
+    if(total>=33) { promo=1; msg="三役で三場所三十三勝——文句なしの大関昇進！"; }
+    else if(w>=13 && prevOk){ promo=1; msg="関脇で十三勝の大暴れ。臨時理事会は満場一致で大関を承認した。"; }
+    else if(!kachikoshi) promo=-1;
+    else msg=`大関取りへ、直近三役での白星 ${total}／33。`;
+  } else if(idx===8){               // 大関 → 横綱
+    const prev = state.history[state.history.length-2];
+    const renzoku = w>=12 && prev && prev.rankIdx===8 && prev.wins>=12;
+    if(w>=13){ promo=1; msg="十三勝の快進撃！横綱審議委員会、満場一致——"; }
+    else if(renzoku){ promo=1; msg="二場所連続の十二勝。優勝に準ずる成績と認められた——"; }
+    else if(!kachikoshi){
+      if(r.kadoban){ promo=-1; r.kadoban=false; msg="角番で負け越し…関脇へ陥落。"; }
+      else { r.kadoban=true; msg="負け越し。来場所は角番だ。"; }
+    } else r.kadoban=false;
+  }
+
+  r.rank = clamp(r.rank+promo, 0, 9);
+  const yusho = w===n || (n===15 && w>=14);
+  state.resultMsg = {wins:w, losses:n-w, promo, msg, yusho, kachikoshi};
+
+  if(r.rank===9 && promo===1){ state.phase="yokozuna"; Sfx.fanfare(); Sfx.taiko(0.5,0.5); Sfx.taiko(0.9,0.5); }
+  else { state.phase = "bashoResult"; if(promo===1) Sfx.fanfare(); else if(promo===-1) Sfx.sad(); else if(yusho) Sfx.fanfare(); else Sfx.ki(0); }
+  render();
+}
+
+function nextBasho(){
+  state.bashoCount++;
+  state.day = 1;
+  state.flags.eventThisBasho = false;
+  state.rikishi.fatigue = clamp(state.rikishi.fatigue-20,0,100);
+  state.basho = null;
+  state.resultMsg = null;
+  state.phase = "training";
+  render();
+}
+
+// ---------- render ----------
+const app = document.getElementById("app");
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---------- wrestlers on the dohyo ----------
+function wrestlerSVG(mawashi){
+  return `<svg viewBox="0 0 110 112" xmlns="http://www.w3.org/2000/svg"><g class="breath">
+    <rect x="24" y="80" width="19" height="30" rx="9.5" fill="#dfae7d"/>
+    <rect x="62" y="80" width="19" height="30" rx="9.5" fill="#dfae7d"/>
+    <ellipse cx="52" cy="58" rx="35" ry="33" fill="#eec095"/>
+    <path d="M36 68 q16 11 32 0" stroke="#c98f5e" fill="none" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="45" cy="52" r="2" fill="#c98f5e"/><circle cx="60" cy="52" r="2" fill="#c98f5e"/>
+    <rect x="19" y="73" width="66" height="15" rx="7.5" fill="${mawashi}"/>
+    <rect x="46" y="73" width="13" height="30" rx="6" fill="${mawashi}"/>
+    <rect x="74" y="40" width="32" height="14" rx="7" fill="#eec095"/>
+    <rect x="76" y="57" width="28" height="14" rx="7" fill="#eec095"/>
+    <circle cx="60" cy="21" r="15" fill="#efc49b"/>
+    <path d="M49 10 q11 -11 22 0 l-4 4.5 q-7 -6 -14 0 z" fill="#211a12"/>
+    <ellipse cx="66" cy="19" rx="2" ry="2.6" fill="#211a12"/>
+    <path d="M70 27 q3 2 6 1" stroke="#b5713d" fill="none" stroke-width="2" stroke-linecap="round"/>
+  </g></svg>`;
+}
+function wrestlerScale(weight){ return clamp(0.82 + (weight-100)/260, 0.72, 1.25); }
+function stageHTML(oppWeight){
+  const sE = wrestlerScale(state.rikishi.weight);
+  const sW = wrestlerScale(oppWeight);
+  return `<div class="dohyo-stage">
+    <div class="ring"></div><div class="shikirisen"></div>
+    <div class="wrestler" id="w-east" style="left:27%;transform:translateX(-50%) scale(${sE}) translateY(6px)">${wrestlerSVG("#a32c22")}</div>
+    <div class="wrestler flip" id="w-west" style="left:73%;transform:translateX(-50%) scale(${sW}) translateY(6px)">${wrestlerSVG("#2b2b33")}</div>
+  </div>`;
+}
+function animateBout(){
+  const a = state.lastAnim;
+  const E = document.getElementById("w-east"), W = document.getElementById("w-west");
+  if(!a || !E || !W) return;
+  const sE = wrestlerScale(state.rikishi.weight), sW = wrestlerScale(a.oppWeight);
+  const setPos = (el,x,s,extra="")=>{ el.style.left=x+"%"; el.style.transform=`translateX(-50%) scale(${s}) ${extra}`; };
+  const shiftOf = m => clamp(m,-85,85)*0.26;   // モメンタム→土俵上の位置ズレ(%)
+  const finish = ()=>{
+    if(a.playerWon){
+      W.classList.add("fallen");
+      if(a.henkaFinish){ setPos(W,58,sW,"rotate(82deg)");  setPos(E,42,sE); }
+      else             { setPos(W,94,sW,"rotate(72deg)");  setPos(E,72,sE); }
+    }else{
+      E.classList.add("fallen");
+      if(a.henkaFinish){ setPos(E,42,sE,"rotate(-82deg)"); setPos(W,58,sW); }
+      else             { setPos(E,6, sE,"rotate(-72deg)"); setPos(W,28,sW); }
+    }
+  };
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ finish(); Sfx.fall(); revealResult(); return; }
+  let t = 550;
+  Sfx.ki(0); Sfx.taiko(0.18);
+  setTimeout(()=>{ setPos(E,44.5,sE); setPos(W,55.5,sW); }, t);   // 立合いの衝突
+  Sfx.clash(t/1000);
+  a.moms.forEach(m=>{
+    t += 620;
+    Sfx.push(t/1000);
+    setTimeout(()=>{ const sh=shiftOf(m); setPos(E,44.5+sh,sE); setPos(W,55.5+sh,sW); }, t);
+  });
+  t += 700;
+  setTimeout(finish, t);
+  Sfx.fall(t/1000);
+  Sfx.cheer(t/1000+0.12, a.playerWon?2.0:1.1, a.playerWon?0.26:0.14);
+  setTimeout(revealResult, t + 650);           // 転倒を見せてから結果開示
+}
+
+// アニメ終了後に決まり手・勝敗・星取・ボタンを開示（DOM直接更新でステージを保持）
+function revealResult(){
+  if(state.phase!=="boutResult" || state.animDone) return;
+  state.animDone = true;
+  const b = state.basho;
+  const blog = document.getElementById("blog");
+  if(blog && state.finalLog){
+    state.finalLog.forEach(l=>{
+      const p = document.createElement("p");
+      if(typeof l === "object"){ p.className="winline"; p.textContent=l.text; }
+      else { p.className = l.startsWith("決まり手") ? "kimarite" : ""; p.textContent=l; }
+      blog.appendChild(p);
+    });
+    blog.scrollTop = blog.scrollHeight;
+  }
+  const hp = document.getElementById("hoshi-panel");
+  if(hp) hp.innerHTML = `<h2>星取表<small>${b.wins}勝${b.losses}敗</small></h2>${hoshitoriHTML(b)}`;
+  const btn = document.getElementById("btn-next");
+  if(btn){ btn.disabled = false; btn.textContent = b.idx+1>=b.bouts.length ? "千秋楽を終える" : "翌日へ"; }
+}
+
+// ---------- eating scene ----------
+const NABE_COLOR = { meat:"#b4553c", fish:"#cfa96c", veg:"#5c8a4a" };
+function nabeSVG(kind){
+  const soup = NABE_COLOR[kind];
+  const bits = { meat:["#8f3f2c","#a85a3f","#7d3324"], fish:["#e8dcc0","#d4bfa0","#f0e6d2"], veg:["#3f6b32","#6ea055","#8fbb6a"] }[kind];
+  let g = "";
+  for(let i=0;i<7;i++){
+    const x = 28 + (i%4)*22 + (i>3?11:0), y = 30 + Math.floor(i/4)*9;
+    g += `<ellipse cx="${x}" cy="${y}" rx="8" ry="4.6" fill="${bits[i%3]}"/>`;
+  }
+  return `<svg viewBox="0 0 140 78" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="70" cy="34" rx="56" ry="17" fill="#3a3a42"/>
+    <ellipse cx="70" cy="33" rx="50" ry="13.5" fill="${soup}"/>
+    ${g}
+    <path d="M14 34 q0 30 56 30 q56 0 56 -30 z" fill="#4a4a54"/>
+    <ellipse cx="70" cy="34" rx="56" ry="17" fill="none" stroke="#2f2f38" stroke-width="4"/>
+    <rect x="0" y="30" width="18" height="8" rx="4" fill="#2f2f38"/>
+    <rect x="122" y="30" width="18" height="8" rx="4" fill="#2f2f38"/>
+  </svg>`;
+}
+function eaterSVG(){
+  return `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+    <ellipse class="belly" cx="52" cy="66" rx="40" ry="30" fill="#eec095" style="transform-origin:52px 66px"/>
+    <rect x="18" y="80" width="70" height="14" rx="7" fill="#a32c22"/>
+    <g class="head-grp">
+      <rect x="70" y="44" width="30" height="13" rx="6.5" fill="#eec095"/>
+      <g class="bowl-arm">
+        <rect x="84" y="38" width="26" height="13" rx="6.5" fill="#eec095"/>
+        <path d="M84 30 q13 16 26 0 z" fill="#f3ece0" stroke="#c9b895" stroke-width="1.5"/>
+        <rect x="104" y="14" width="3" height="20" rx="1.5" fill="#8a6134" transform="rotate(14 105 24)"/>
+        <rect x="109" y="14" width="3" height="20" rx="1.5" fill="#8a6134" transform="rotate(20 110 24)"/>
+      </g>
+      <circle cx="62" cy="28" r="16" fill="#efc49b"/>
+      <path d="M50 17 q12 -12 24 0 l-4 5 q-8 -6.5 -16 0 z" fill="#211a12"/>
+      <ellipse class="jaw" cx="70" cy="34" rx="5" ry="4" fill="#d99a6a"/>
+      <ellipse cx="69" cy="25" rx="2" ry="2.6" fill="#211a12"/>
+      <path d="M58 24 q4 -2 8 0" stroke="#211a12" fill="none" stroke-width="1.6" stroke-linecap="round"/>
+    </g>
+  </svg>`;
+}
+function eatStageHTML(){
+  const p = state.pendingDay;
+  const ch = CHANKO[p.chanko], am = AMOUNTS[p.amount];
+  let steam = "";
+  for(let i=0;i<6;i++) steam += `<span style="left:${8+i*18}%;animation-delay:${i*0.38}s"></span>`;
+  return `<div class="eat-stage">
+    <div class="eat-table"></div>
+    <div class="eater">${eaterSVG()}</div>
+    <div class="nabe">${nabeSVG(p.chanko)}</div>
+    <div class="steam">${steam}</div>
+    <div class="eat-caption">${ch.label}を${am.label}に</div>
+  </div>`;
+}
+
+function statBars(r){
+  const bar=(cls,label,v)=>`
+    <div class="stat ${cls}"><span>${label}</span>
+      <span class="bar"><i style="width:${v/STAT_CAP*100}%"></i></span>
+      <span class="val">${Math.round(v)}</span></div>`;
+  return `
+    ${bar("c-power","筋力",r.power)}
+    ${bar("c-tech","技",r.tech)}
+    ${bar("c-stam","スタミナ",r.stamina)}
+    ${bar("c-mental","気合",r.mental)}
+    <div class="meta-row">
+      <span>体重 <b>${r.weight}</b> kg <span class="weight-hint">（${weightHint(r.weight)}）</span></span>
+      <span class="${r.fatigue>=70?'fatigue-warn':''}">疲労 <b>${Math.round(r.fatigue)}</b></span>
+    </div>`;
+}
+
+function headerHTML(){
+  const r = state.rikishi;
+  const inTraining = ["training","trainAnim","eatAnim","event"].includes(state.phase);
+  return `<header>
+    <div class="fuda">${esc(RANKS[r.rank])}</div>
+    <div class="info">
+      <div class="name">${esc(r.name)}${state.flags.married?" ❁":""}</div>
+      <div class="basho">第${state.bashoCount}場所${r.kadoban?"・<span style='color:#e8a0a0'>角番</span>":""}</div>
+      <div class="basho">${inTraining?`稽古 ${Math.min(state.day,TRAIN_DAYS)}／${TRAIN_DAYS}日目`:"本場所"}</div>
+    </div>
+  </header>`;
+}
+
+function optGrid(defs, selKey, cols=2){
+  return `<div class="opts" style="grid-template-columns:repeat(${cols},1fr)">` +
+    Object.entries(defs).map(([k,v])=>`
+      <div class="opt ${state.sel[selKey]===k?'sel':''}" data-sel="${selKey}" data-key="${k}">
+        <div class="t">${v.label}</div><div class="d">${v.desc||""}</div>
+      </div>`).join("") + `</div>`;
+}
+
+function hoshitoriHTML(b, hideLast=false){
+  const n = b.bouts.length;
+  const shown = hideLast ? b.results.slice(0,-1) : b.results;
+  let h='<div class="hoshitori">';
+  for(let i=0;i<n;i++){
+    if(i<shown.length) h+=`<span class="hoshi ${shown[i]?'win':'lose'}"></span>`;
+    else h+=`<span class="hoshi ${i===shown.length?'next':''}"></span>`;
+  }
+  return h+"</div>";
+}
+
+function render(){
+  const r = state.rikishi;
+  let body = headerHTML();
+
+  if(state.phase==="training"){
+    body += `<div class="panel"><h2>力士台帳</h2>${statBars(r)}</div>`;
+    if(state.resultMsg) body+=`<div class="panel" style="color:var(--akafusa);font-size:13px">${esc(state.resultMsg)}</div>`;
+    body += `<div class="panel"><h2>今日の稽古<small>ひとつ選ぶ</small></h2>${optGrid(TRAININGS,"train")}</div>`;
+    body += `<div class="panel"><h2>今日のちゃんこ<small>具と量を選ぶ</small></h2>
+      ${optGrid(CHANKO,"chanko",3)}
+      <div class="amount-row">${Object.entries(AMOUNTS).map(([k,v])=>`
+        <div class="opt ${state.sel.amount===k?'sel':''}" data-sel="amount" data-key="${k}"><div class="t">${v.label}</div></div>`).join("")}
+      </div>
+      <button class="main" id="btn-endday" ${(!state.sel.train||!state.sel.chanko)?"disabled":""}>一日を終える</button>
+    </div>`;
+  }
+
+  if(state.phase==="trainAnim"){
+    const p = state.pendingDay;
+    const tr = TRAININGS[p.train], ch = CHANKO[p.chanko], am = AMOUNTS[p.amount];
+    const s = wrestlerScale(r.weight);
+    const partner = (p.train==="butsukari" || p.train==="moshiai");
+    const outerCls = p.train==="butsukari" ? "t-dash" : p.train==="suriashi" ? "t-slide" : "";
+    const px = p.train==="moshiai" ? 42 : partner ? 30 : 50;
+    body += `<div class="panel"><h2>稽古 ${state.day}日目</h2>
+      <div class="dohyo-stage">
+        <div class="ring"></div>
+        ${p.train==="teppo" ? `<div class="teppo-pole"></div>` : ""}
+        ${partner ? `<div class="wrestler flip" style="left:${p.train==="moshiai"?58:64}%;transform:translateX(-50%) scale(${s*0.97})">
+            <div class="mover ${p.train==="moshiai"?"anim-moshiai-r":""}">${wrestlerSVG("#2e5e52")}</div>
+          </div>` : ""}
+        <div class="wrestler ${outerCls}" style="left:${px}%;transform:translateX(-50%) scale(${s})">
+          <div class="mover anim-${p.train}">${wrestlerSVG("#a32c22")}</div>
+        </div>
+        <div class="train-caption">${p.train==="rest"?"休養──ぐっすり眠る":tr.label+"稽古"} ／ ${ch.label}（${am.label}）</div>
+      </div>
+      <div class="result-note">画面タップでスキップ</div>
+    </div>`;
+  }
+
+  if(state.phase==="eatAnim"){
+    body += `<div class="panel"><h2>ちゃんこ ${state.day}日目</h2>
+      ${eatStageHTML()}
+      <div class="result-note">画面タップでスキップ</div>
+    </div>`;
+  }
+
+  if(state.phase==="event"){
+    const ev = state.curEvent;
+    const petals = ev.id==="kekkon"||ev.id==="okamisan"
+      ? Array.from({length:9},(_,i)=>`<span class="sakura" style="left:${8+i*10}%;animation-delay:${i*0.35}s">❀</span>`).join("")
+      : "";
+    body += `<div class="event-card">
+      ${petals}
+      <div class="ev-icon">${ev.icon}</div>
+      <div class="ev-title">${esc(ev.title)}</div>
+      <div class="ev-text">${esc(ev.text(state))}</div>
+      ${state.eventGain?`<div class="ev-gain">${esc(state.eventGain)}</div>`:""}
+      <button class="main" id="btn-closeevent">承知</button>
+    </div>`;
+  }
+
+  if(state.phase==="basho"){
+    const b=state.basho, opp=b.bouts[b.idx];
+    body += `<div class="panel"><h2>星取表<small>${b.wins}勝${b.losses}敗</small></h2>${hoshitoriHTML(b)}</div>`;
+    body += `<div class="panel"><h2>${b.idx+1}日目の取組</h2>
+      ${stageHTML(opp.weight)}
+      <div class="opp-card">
+        <div class="oname">${esc(opp.name)}</div>
+        <div class="odesc">体重 ${opp.weight}kg<br>${opp.power>opp.tech+10?"突き押し型":opp.tech>opp.power+10?"四つ相撲型":"バランス型"}の力士</div>
+      </div>
+      ${optGrid(TACTICS,"tactic",3)}
+      <button class="main aka" id="btn-fight" ${!state.sel.tactic?"disabled":""}>立合い！</button>
+    </div>`;
+  }
+
+  if(state.phase==="boutResult"){
+    const b=state.basho;
+    const hide = !state.animDone;
+    const last = b.results[b.results.length-1];
+    const dw = b.wins  - (hide && last===1 ? 1 : 0);
+    const dl = b.losses - (hide && last===0 ? 1 : 0);
+    body += `<div class="panel" id="hoshi-panel"><h2>星取表<small>${dw}勝${dl}敗</small></h2>${hoshitoriHTML(b, hide)}</div>`;
+    body += `<div class="panel"><h2>実況</h2>
+    ${stageHTML(state.lastAnim ? state.lastAnim.oppWeight : 150)}
+    <div class="blog" id="blog">${
+      state.lastLog.map((l,i)=>{
+        const txt = typeof l==="string"?l:l.text;
+        return `<p style="animation-delay:${i*0.4}s">${esc(txt)}</p>`;
+      }).join("")
+    }</div>
+    <button class="main" id="btn-next" ${hide?"disabled":""}>${hide?"――勝負あり――"
+      :(b.idx+1>=b.bouts.length?"千秋楽を終える":"翌日へ")}</button></div>`;
+  }
+
+  if(state.phase==="bashoResult"){
+    const m=state.resultMsg;
+    body += `<div class="panel">
+      <div class="result-big">${m.wins}勝${m.losses}敗</div>
+      ${m.yusho?`<div class="yusho-banner">☆ 優 勝 ☆</div>`:""}
+      <div class="result-note">
+        ${m.kachikoshi?"勝ち越し！":"負け越し…"}<br>
+        ${m.promo===1?`<span class="promo">${esc(RANKS[r.rank])}に昇進！</span>`:
+          m.promo===-1?`${esc(RANKS[r.rank])}に降格…`:"番付据え置き。"}<br>
+        ${m.msg?esc(m.msg):""}
+      </div>
+      <button class="main" id="btn-nextbasho">次の場所へ</button>
+    </div>`;
+  }
+
+  if(state.phase==="yokozuna"){
+    body += `<div class="panel">
+      <div class="result-big">横綱昇進</div>
+      <div class="yusho-banner">不 撓 不 屈</div>
+      <div class="result-note">
+        ${esc(r.name)}、第${state.bashoCount}場所にして角界の頂点に立つ。<br>
+        土俵入りの拍手が、鳴り止まない。<br><br>
+        通算 ${state.history.reduce((s,h)=>s+h.wins,0)}勝 ${state.history.reduce((s,h)=>s+h.losses,0)}敗
+      </div>
+      <button class="main aka" id="btn-continue">横綱として次の場所へ</button>
+      <button class="main" id="btn-newgame">新たな力士で最初から</button>
+    </div>`;
+  }
+
+  body += `<footer>白星街道 prototype v0.4 — 稽古と食事、そして人生</footer>`;
+  app.innerHTML = body;
+}
+
+// ---------- events (delegation) ----------
+app.addEventListener("click", e=>{
+  if(state.phase==="trainAnim"){ goEat(); return; }        // タップで食事へ
+  if(state.phase==="eatAnim"){ applyDay(); return; }        // タップでスキップ
+  const opt = e.target.closest(".opt");
+  if(opt){ Sfx.tap(); state.sel[opt.dataset.sel] = opt.dataset.key; render(); return; }
+  const id = e.target.closest("button")?.id;
+  if(id) Sfx.tap();
+  if(id==="btn-endday") endDay();
+  if(id==="btn-fight")  fightBout(state.sel.tactic);
+  if(id==="btn-next")   nextBout();
+  if(id==="btn-closeevent") closeEvent();
+  if(id==="btn-nextbasho") nextBasho();
+  if(id==="btn-continue")  nextBasho();
+  if(id==="btn-newgame")   newGame();
+});
+
+// 音量トグル（初回タップでAudioContextを起こす）
+const soundBtn = document.createElement("button");
+soundBtn.id = "sound-btn"; soundBtn.textContent = "♪";
+soundBtn.title = "音のオン／オフ";
+soundBtn.addEventListener("click", ()=>{
+  const on = Sfx.toggle();
+  soundBtn.textContent = on ? "♪" : "✕";
+  soundBtn.style.opacity = on ? "1" : ".45";
+});
+document.body.appendChild(soundBtn);
+
+newGame();
+</script>
+</body>
+</html>
