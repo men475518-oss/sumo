@@ -1,0 +1,4346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#c29a5e">
+<meta name="description" content="序ノ口から横綱へ。稽古とちゃんこで身体を作り、十五日間の本場所を戦い抜く相撲力士育成ゲーム。">
+<!--
+  白星街道 〜序ノ口から横綱へ〜
+  このファイルは build.js が生成した単一ファイル版です。
+  編集するときは assets/ 以下の元ファイルを直し、node build.js を実行してください。
+-->
+<title>白星街道 〜序ノ口から横綱へ〜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   白星街道 / style.css
+   ---------------------------------------------------------------------
+   土俵の粘土、番付の和紙、墨、そして四房の色。
+   ===================================================================== */
+:root {
+  --clay: #c29a5e;
+  --clay-deep: #a37e46;
+  --washi: #f8f2e2;
+  --washi-dim: #eee3ca;
+  --washi-line: rgba(33, 26, 18, .14);
+  --sumi: #211a12;
+  --sumi-soft: #5b5041;
+  --akafusa: #a32c22;
+  --aofusa: #2e5e52;
+  --kurofusa: #2b2b33;
+  --shirofusa: #8d8570;
+  --gold: #b08328;
+  --shadow: 0 2px 0 rgba(0, 0, 0, .16);
+  --radius: 7px;
+  --font-brush: "Yuji Syuku", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-body);
+  color: var(--sumi);
+  background:
+    radial-gradient(circle at 50% -12%, #dcbb82 0%, transparent 58%),
+    repeating-linear-gradient(115deg, rgba(0, 0, 0, .028) 0 2px, transparent 2px 7px),
+    var(--clay);
+  background-attachment: fixed;
+  display: flex; justify-content: center;
+  min-height: 100dvh;
+  line-height: 1.6;
+  font-size: 15px;
+}
+#app {
+  width: 100%; max-width: 520px;
+  padding: 12px 12px 48px;
+  display: flex; flex-direction: column; gap: 11px;
+}
+@media (min-width: 900px) { #app { max-width: 600px; } }
+
+/* ---------- 面（和紙） ---------- */
+.panel, .event-card, .overlay-card, .title-screen {
+  background: var(--washi);
+  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, .012) 0 1px, transparent 1px 4px);
+  border: 1px solid var(--washi-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+h2 {
+  font-family: var(--font-brush); font-weight: 400; font-size: 19px;
+  letter-spacing: .1em; margin-bottom: 11px;
+  border-bottom: 2px solid var(--sumi); padding-bottom: 5px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+}
+h2 small { font-family: var(--font-body); font-size: 12px; color: var(--sumi-soft); letter-spacing: 0; font-weight: 500; }
+h3.sub-h {
+  font-family: var(--font-brush); font-size: 15px; letter-spacing: .12em;
+  margin: 12px 0 6px; color: var(--sumi-soft);
+  border-left: 3px solid var(--akafusa); padding-left: 7px;
+}
+.hint { font-size: 11.5px; color: var(--sumi-soft); line-height: 1.55; }
+.hint.small { font-size: 10.5px; }
+.center { text-align: center; }
+.lead { font-size: 13.5px; line-height: 2; margin: 8px 0; }
+.note { font-size: 12.5px; color: var(--sumi-soft); }
+.bad { color: var(--akafusa); font-weight: 700; font-size: 12.5px; display: block; margin-top: 4px; }
+.promo { color: var(--akafusa); font-weight: 700; }
+
+/* ---------- ヘッダ ---------- */
+.app-head {
+  background: var(--sumi); color: var(--washi);
+  border-radius: var(--radius); padding: 9px 11px;
+  display: flex; align-items: center; gap: 11px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .22);
+  position: sticky; top: 6px; z-index: 20;
+}
+.fuda {
+  /* 縦書きの札。CSS の writing-mode は字が重なったり欠けたりするため、
+     一文字ずつ span に分けて縦に積む。字体に左右されず確実に並ぶ。 */
+  font-family: var(--font-brush); font-size: 21px; line-height: 1.1;
+  background: var(--washi); color: var(--sumi);
+  padding: 8px 7px; border-radius: 3px;
+  min-height: 92px; flex: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border-left: 4px solid var(--akafusa);
+}
+.fuda span { display: block; }
+.fuda.long { font-size: 17px; }
+.fuda.sanyaku { border-left-color: var(--gold); background: #fffaef; }
+.fuda.big { font-size: 27px; min-height: 112px; margin: 0 auto 8px; width: max-content; }
+.head-info { flex: 1; min-width: 0; }
+.head-info .name { font-family: var(--font-brush); font-size: 21px; letter-spacing: .06em; }
+.head-info .rank-line { font-size: 12.5px; opacity: .95; }
+.head-info .basho-line, .head-info .heya-line { font-size: 11px; opacity: .68; }
+.head-injury { color: #e8a0a0; margin-left: 6px; opacity: 1; }
+.kadoban { color: #e8a0a0; margin-left: 6px; border: 1px solid #e8a0a0; padding: 0 4px; border-radius: 3px; font-size: 10px; }
+.head-nav { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; flex: none; }
+.head-nav .ic {
+  width: 30px; height: 26px; border-radius: 4px; border: 1px solid rgba(248, 242, 226, .35);
+  background: transparent; color: var(--washi); font-family: var(--font-brush);
+  font-size: 13px; cursor: pointer;
+}
+.head-nav .ic:active { background: rgba(248, 242, 226, .2); }
+
+/* ---------- 能力バー ---------- */
+.stat {
+  display: grid; grid-template-columns: 52px 1fr 62px;
+  align-items: center; gap: 8px; margin: 5px 0; font-size: 12.5px;
+}
+.stat .bar {
+  height: 11px; background: var(--washi-dim); border-radius: 6px;
+  overflow: hidden; border: 1px solid rgba(0, 0, 0, .1);
+}
+.stat .bar i { display: block; height: 100%; border-radius: 6px; transition: width .45s ease; }
+.stat .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.stat .val .up { color: var(--aofusa); font-size: 10px; font-style: normal; margin-left: 3px; }
+.st-power .bar i { background: var(--akafusa); }
+.st-tech .bar i { background: var(--aofusa); }
+.st-stamina .bar i { background: var(--gold); }
+.st-mental .bar i { background: var(--kurofusa); }
+.st-tachiai .bar i { background: #8a5a2b; }
+.st-legs .bar i { background: #4a6b8a; }
+
+.meta-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px;
+  margin-top: 10px; padding-top: 9px; border-top: 1px dashed rgba(0, 0, 0, .18);
+  font-size: 12.5px;
+}
+.meta-grid .k { color: var(--sumi-soft); font-size: 11px; margin-right: 4px; }
+.meta-grid b { font-variant-numeric: tabular-nums; font-size: 15px; }
+.meta-grid b.warn { color: var(--akafusa); }
+.meta-grid b.mid { color: #a5701f; }
+.injury-row { margin-top: 8px; }
+.injury { color: var(--akafusa); font-weight: 700; font-size: 12.5px; }
+.scout {
+  margin-top: 10px; padding: 7px 9px; border-radius: 4px; font-size: 12.5px;
+  background: var(--washi-dim); border-left: 3px solid var(--sumi-soft);
+}
+.scout.s4 { border-left-color: var(--gold); }
+.scout.s5 { border-left-color: var(--akafusa); font-weight: 700; }
+
+.flash {
+  background: #fffaee; border: 1px dashed var(--akafusa); border-radius: var(--radius);
+  padding: 9px 11px; font-size: 12.5px;
+}
+.flash .gain { color: var(--aofusa); font-weight: 700; margin-left: 6px; }
+
+/* ---------- 選択肢 ---------- */
+.opts { display: grid; grid-template-columns: repeat(var(--cols, 2), 1fr); gap: 7px; }
+.opt {
+  background: var(--washi-dim); border: 2px solid transparent; border-radius: 6px;
+  padding: 9px 10px; cursor: pointer; user-select: none;
+  transition: border-color .14s, background .14s, transform .08s;
+}
+.opt:active { transform: translateY(1px); }
+.opt.sel { border-color: var(--akafusa); background: #fff; }
+.opt.off { opacity: .38; cursor: not-allowed; }
+.opt .t { font-weight: 700; font-size: 13.5px; }
+.opt .d { font-size: 11px; color: var(--sumi-soft); line-height: 1.5; margin-top: 2px; }
+.opt .req { font-size: 10px; color: var(--akafusa); margin-top: 3px; }
+.opt.small .d { font-size: 10px; }
+.opt.tiny { padding: 7px; text-align: center; }
+.amount-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 7px; }
+
+/* ---------- ボタン ---------- */
+button.main {
+  width: 100%; padding: 13px; margin-top: 11px;
+  font-family: var(--font-brush); font-size: 18px; letter-spacing: .18em;
+  background: var(--sumi); color: var(--washi);
+  border: none; border-radius: var(--radius); cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .3);
+}
+button.main:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, .3); }
+button.main:disabled { opacity: .35; cursor: not-allowed; }
+button.main.aka { background: var(--akafusa); }
+button.main.ghost {
+  background: transparent; color: var(--sumi); border: 2px solid var(--sumi);
+  box-shadow: none; font-size: 15px; padding: 10px;
+}
+.btn-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 8px; }
+.btn-row button.main { margin-top: 0; }
+button.mini {
+  padding: 8px 12px; border: 2px solid var(--sumi); background: transparent;
+  border-radius: 5px; font-family: var(--font-brush); font-size: 13px; cursor: pointer;
+  color: var(--sumi); white-space: nowrap;
+}
+
+/* ---------- 星取表 ---------- */
+.hoshitori { display: flex; flex-wrap: wrap; gap: 5px; }
+.hoshi {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2.5px solid var(--sumi); background: transparent;
+}
+.hoshi.win { background: #fff; }
+.hoshi.lose { background: var(--sumi); }
+.hoshi.fusen { border-style: double; }
+.hoshi.next { border-style: dashed; opacity: .45; }
+
+/* ---------- 土俵 ---------- */
+.dohyo-stage {
+  position: relative; height: 200px; margin-bottom: 10px;
+  background: linear-gradient(#2b2b33 0%, #3a3a44 22%, #e3c894 22%, #cfa96c 74%, #b98f52 100%);
+  border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(0, 0, 0, .18);
+}
+.dohyo-stage .kyakuseki {
+  position: absolute; top: 22%; left: 0; right: 0; height: 12%;
+  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .16) 0 6px, transparent 6px 13px);
+  opacity: .5;
+}
+.dohyo-stage .yakata {
+  position: absolute; top: 0; left: 0; right: 0; height: 22%;
+  background: linear-gradient(#5a3b22, #3f2a18);
+  border-bottom: 3px solid #2a1c10;
+}
+.dohyo-stage .fusa {
+  position: absolute; top: 100%; width: 9px; height: 26px; border-radius: 0 0 5px 5px;
+}
+.fusa.f-ao { left: 8%; background: linear-gradient(var(--aofusa), #1d4038); }
+.fusa.f-aka { right: 8%; background: linear-gradient(var(--akafusa), #6e1c15); }
+.fusa.f-shiro { left: 24%; background: linear-gradient(#e8e2d0, #b3ac96); }
+.fusa.f-kuro { right: 24%; background: linear-gradient(#3a3a44, #17171c); }
+.dohyo-stage .dohyo-block {
+  position: absolute; left: 4%; right: 4%; bottom: 0; height: 26%;
+  background: linear-gradient(#c8a26a, #a9avc 0%, #a37e46);
+  background: linear-gradient(#c8a26a, #a37e46);
+}
+.dohyo-stage .ring {
+  position: absolute; left: 50%; bottom: 12px; width: 84%; height: 54px;
+  transform: translateX(-50%);
+  border: 5px solid #8a6a3a; border-radius: 50%;
+  background: rgba(255, 252, 240, .16);
+  box-shadow: inset 0 3px 7px rgba(0, 0, 0, .13);
+}
+.dohyo-stage .shikirisen {
+  position: absolute; bottom: 30px; width: 22px; height: 3px;
+  background: rgba(255, 255, 255, .72); border-radius: 2px;
+}
+.dohyo-stage .shikirisen.l { left: 42%; }
+.dohyo-stage .shikirisen.r { right: 42%; }
+.dohyo-stage .gyoji { position: absolute; right: 4%; bottom: 34px; width: 44px; opacity: .95; }
+.dohyo-stage .gyoji svg { width: 100%; height: auto; }
+.stage-caption {
+  position: absolute; top: 4px; left: 0; right: 0; text-align: center;
+  font-family: var(--font-brush); font-size: 14px; letter-spacing: .14em;
+  color: #f3e6c8; text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
+}
+.dohyo-stage.keiko { background: linear-gradient(#e6cd9c 0%, #cfa96c 70%, #b98f52 100%); }
+.dohyo-stage.keiko .yakata, .dohyo-stage.keiko .kyakuseki { display: none; }
+.dohyo-stage.keiko .stage-caption { color: #4a3a24; text-shadow: none; }
+
+.wrestler {
+  position: absolute; bottom: 26px; width: 76px;
+  transform-origin: 50% 92%;
+  transition: left .55s cubic-bezier(.3, 1.3, .4, 1), transform .55s cubic-bezier(.3, 1.3, .4, 1);
+  will-change: left, transform;
+}
+.wrestler svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, .25)); }
+.wrestler.flip svg { transform: scaleX(-1); }
+.wrestler.fallen { transition: left .45s ease-in, transform .45s ease-in; }
+.wrestler .breath { animation: breathe 1.7s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2.5px); } }
+
+.bout-names {
+  display: flex; justify-content: center; gap: 10px; align-items: baseline;
+  font-family: var(--font-brush); font-size: 15px; margin-bottom: 6px;
+}
+.bout-names .sep { color: var(--sumi-soft); }
+.tap-hint { text-align: center; font-size: 11px; color: var(--sumi-soft); margin-top: 4px; }
+
+/* ---------- 稽古の動き ---------- */
+.teppo-pole {
+  position: absolute; left: 63%; bottom: 22px; width: 13px; height: 120px;
+  background: linear-gradient(90deg, #93713e, #6f5330); border-radius: 4px;
+  box-shadow: 2px 3px 4px rgba(0, 0, 0, .2);
+}
+.mover { transform-origin: 50% 92%; }
+@keyframes a-shiko {
+  0%, 45%, 100% { transform: rotate(0) translateY(0); }
+  12% { transform: rotate(-15deg) translateY(-12px); }
+  22% { transform: rotate(-3deg) translateY(3px); }
+  57% { transform: rotate(15deg) translateY(-12px); }
+  67% { transform: rotate(3deg) translateY(3px); }
+}
+.anim-shiko { animation: a-shiko 1.6s ease-in-out infinite; }
+@keyframes a-teppo {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(15px) rotate(3deg); }
+  35% { transform: translateX(-2px) rotate(0); }
+  55% { transform: translateX(15px) rotate(3deg); }
+  70% { transform: translateX(-2px) rotate(0); }
+}
+.anim-teppo { animation: a-teppo 1.1s ease-in-out infinite; }
+@keyframes a-lean { 0%, 100% { transform: rotate(2deg); } 50% { transform: rotate(10deg) translateX(5px); } }
+.anim-butsukari { animation: a-lean 1.2s ease-in-out infinite; }
+@keyframes a-moshiai {
+  0%, 100% { transform: rotate(0) translateX(0); }
+  25% { transform: rotate(3deg) translateX(4px); }
+  75% { transform: rotate(-2deg) translateX(-3px); }
+}
+.anim-moshiai, .anim-sanban { animation: a-moshiai .9s ease-in-out infinite; }
+.anim-moshiai-r { animation: a-moshiai .9s ease-in-out infinite reverse; }
+@keyframes a-crouch { 0%, 100% { transform: translateY(8px); } 50% { transform: translateY(11px); } }
+.anim-suriashi { animation: a-crouch .8s linear infinite; }
+@keyframes a-rest { 0% { transform: rotate(0); } 35%, 100% { transform: rotate(84deg) translateX(-14px) translateY(6px); } }
+.anim-rest, .anim-chiryo { animation: a-rest 2.2s ease forwards; }
+@keyframes a-weight { 0%, 100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(6px) scaleY(.94); } }
+.anim-weight { animation: a-weight 1.1s ease-in-out infinite; }
+@keyframes a-kenkyu { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+.anim-kenkyu, .anim-degeiko { animation: a-kenkyu 2s ease-in-out infinite; }
+@keyframes k-dash { 0%, 100% { left: 30%; } 40% { left: 55%; } 55% { left: 51%; } }
+.t-dash { animation: k-dash 1.2s ease-in-out infinite; }
+@keyframes k-slide { 0%, 100% { left: 30%; } 50% { left: 68%; } }
+.t-slide { animation: k-slide 1.6s ease-in-out infinite; }
+
+/* ---------- ちゃんこ ---------- */
+.eat-stage {
+  position: relative; height: 190px; margin-bottom: 10px; overflow: hidden;
+  background: linear-gradient(#f0e0c0 0%, #e2caa0 62%, #c9a978 62%, #b8955f 100%);
+  border-radius: var(--radius); border: 1px solid rgba(0, 0, 0, .15);
+}
+.eat-table { position: absolute; left: 0; right: 0; bottom: 0; height: 38%; background: linear-gradient(#8a6134, #6d4a26); }
+.nabe { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); width: 132px; }
+.steam { position: absolute; left: 50%; bottom: 98px; transform: translateX(-50%); width: 120px; height: 60px; pointer-events: none; }
+.steam span {
+  position: absolute; bottom: 0; width: 13px; height: 13px; border-radius: 50%;
+  background: rgba(255, 255, 255, .6); filter: blur(3px); animation: rise 2.4s ease-out infinite;
+}
+@keyframes rise {
+  0% { transform: translateY(0) scale(.5); opacity: 0; }
+  25% { opacity: .85; }
+  100% { transform: translateY(-58px) scale(1.9); opacity: 0; }
+}
+.eater { position: absolute; left: 14%; bottom: 16px; width: 98px; transform-origin: 50% 92%; }
+.eater .head-grp { transform-origin: 60px 30px; animation: eat-lean 1.68s ease-in-out infinite; }
+@keyframes eat-lean {
+  0%, 100% { transform: rotate(0) translate(0, 0); }
+  30% { transform: rotate(14deg) translate(9px, 10px); }
+  50% { transform: rotate(10deg) translate(6px, 7px); }
+  70% { transform: rotate(2deg) translate(1px, 1px); }
+}
+.eater .jaw { animation: chew .34s ease-in-out infinite; }
+@keyframes chew { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.6px); } }
+.eater .belly { animation: belly 3.2s ease-out infinite; }
+@keyframes belly { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+.bowl-arm { transform-origin: 24px 12px; animation: bowl-lift 1.68s ease-in-out infinite; }
+@keyframes bowl-lift {
+  0%, 100% { transform: translate(0, 0); }
+  30% { transform: translate(-7px, -9px); }
+  60% { transform: translate(-3px, -4px); }
+}
+
+/* ---------- 実況 ---------- */
+.blog {
+  font-size: 13px; line-height: 1.85; margin-top: 8px;
+  max-height: 210px; overflow-y: auto;
+  border-top: 1px dashed rgba(0, 0, 0, .16); padding-top: 8px;
+}
+.blog p { animation: pop .3s both; }
+.blog p.head { font-family: var(--font-brush); font-size: 15px; letter-spacing: .06em; }
+.blog p.call { color: var(--sumi-soft); }
+.blog p.hot { color: var(--akafusa); font-weight: 700; }
+.blog p.cold { color: var(--aofusa); }
+.blog p.kimarite { font-family: var(--font-brush); font-size: 17px; margin-top: 5px; }
+.blog p.win { font-weight: 700; color: var(--akafusa); font-size: 15px; }
+@keyframes pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.choice { margin-top: 10px; border: 2px solid var(--akafusa); border-radius: var(--radius); padding: 9px; background: #fffaee; }
+.choice-title { font-family: var(--font-brush); font-size: 15px; margin-bottom: 7px; text-align: center; }
+
+/* ---------- 対戦相手 ---------- */
+.opp-card {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  background: var(--washi-dim); border-radius: 6px; padding: 9px 11px; margin-bottom: 8px;
+}
+.opp-card .rk { font-size: 11px; color: var(--sumi-soft); }
+.opp-card .oname { font-family: var(--font-brush); font-size: 21px; line-height: 1.2; }
+.opp-card .opp-r { text-align: right; font-size: 12.5px; }
+.scout-note {
+  font-size: 12px; background: #eef3ee; border-left: 3px solid var(--aofusa);
+  padding: 6px 9px; border-radius: 4px; margin-bottom: 6px;
+}
+
+/* ---------- 結果 ---------- */
+.result-kimarite { text-align: center; font-family: var(--font-brush); font-size: 26px; letter-spacing: .1em; }
+.result-big {
+  font-family: var(--font-brush); font-size: 32px; text-align: center;
+  margin: 4px 0 8px; letter-spacing: .14em;
+}
+.result-big.win { color: var(--akafusa); }
+.result-big.lose { color: var(--sumi-soft); }
+.result-rank { text-align: center; font-size: 13px; color: var(--sumi-soft); }
+.result-note { text-align: center; font-size: 13px; color: var(--sumi-soft); line-height: 1.85; }
+.kinboshi-note { color: var(--gold); font-weight: 700; margin-top: 3px; }
+.yusho-banner {
+  text-align: center; font-family: var(--font-brush); font-size: 21px;
+  color: var(--gold); letter-spacing: .3em; margin: 8px 0;
+  border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); padding: 6px 0;
+}
+.trophy { width: 74px; margin: 8px auto; }
+.trophy svg { width: 100%; height: auto; }
+.champ-note { text-align: center; font-size: 12px; color: var(--sumi-soft); margin: 8px 0; }
+
+/* ---------- 番付発表 ---------- */
+.banzuke-move { text-align: center; margin: 6px 0 10px; }
+.banzuke-move .from { font-size: 13px; color: var(--sumi-soft); }
+.banzuke-move .arrow { font-size: 13px; color: var(--akafusa); margin: 2px 0; }
+.banzuke-move .to { font-family: var(--font-brush); font-size: 17px; }
+.headline {
+  text-align: center; font-family: var(--font-brush); font-size: 22px;
+  letter-spacing: .16em; margin: 6px 0;
+}
+.headline.grand { color: var(--akafusa); font-size: 26px; }
+.headline.good { color: var(--aofusa); }
+.headline.bad { color: var(--sumi-soft); }
+.news { list-style: none; font-size: 12px; color: var(--sumi-soft); margin-top: 8px; }
+.news li { padding: 3px 0; border-bottom: 1px dotted rgba(0, 0, 0, .12); }
+
+/* ---------- 表 ---------- */
+.mini-table, .career-table, .history-table, .banzuke-table {
+  width: 100%; border-collapse: collapse; font-size: 12.5px;
+}
+.mini-table td, .history-table td, .history-table th { padding: 4px 3px; border-bottom: 1px dotted rgba(0, 0, 0, .13); }
+.mini-table .rk, .history-table .rk { color: var(--sumi-soft); font-size: 11px; white-space: nowrap; }
+.mini-table .rec { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mini-table tr.me, .banzuke-table .me { background: #fff3d8; font-weight: 700; }
+.career-table th {
+  text-align: left; font-weight: 500; color: var(--sumi-soft); font-size: 11.5px;
+  width: 34%; padding: 5px 3px; border-bottom: 1px dotted rgba(0, 0, 0, .13); vertical-align: top;
+}
+.career-table td { padding: 5px 3px; border-bottom: 1px dotted rgba(0, 0, 0, .13); font-variant-numeric: tabular-nums; }
+.history-table .lb { font-size: 11px; color: var(--sumi-soft); }
+.history-table .rec.kk { color: var(--akafusa); font-weight: 700; }
+.history-table .rec.mk { color: var(--sumi-soft); }
+.badge {
+  display: inline-block; font-style: normal; font-size: 10px; padding: 0 4px;
+  border: 1px solid var(--sumi-soft); border-radius: 3px; margin-left: 2px;
+}
+.badge.gold { border-color: var(--gold); color: var(--gold); font-weight: 700; }
+
+.digest { list-style: none; font-size: 12px; }
+.digest li { padding: 3px 0; border-bottom: 1px dotted rgba(0, 0, 0, .1); }
+.digest li .d { color: var(--sumi-soft); font-size: 10.5px; margin-right: 5px; }
+.digest li .k { color: var(--sumi-soft); font-size: 11px; margin: 0 4px; }
+.digest li.kinboshi { background: #fff6e0; }
+
+/* ---------- 番付表 ---------- */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 9px; padding-right: 32px; }
+.tab {
+  flex: 1; min-width: 56px; padding: 6px 4px; border: 1px solid var(--sumi);
+  background: transparent; border-radius: 4px; cursor: pointer;
+  font-family: var(--font-brush); font-size: 12px; color: var(--sumi);
+}
+.tab.on { background: var(--sumi); color: var(--washi); }
+.bz-head {
+  display: flex; justify-content: space-between; font-family: var(--font-brush);
+  font-size: 13px; border-bottom: 2px solid var(--sumi); padding-bottom: 3px; margin-bottom: 4px;
+}
+.banzuke-table td { padding: 3px 4px; border-bottom: 1px dotted rgba(0, 0, 0, .1); }
+.banzuke-table .bz-name { font-size: 13px; }
+.banzuke-table .bz-name .bz-sub { display: block; font-size: 9.5px; color: var(--sumi-soft); }
+.banzuke-table td:last-child { text-align: right; }
+.banzuke-table .bz-mid {
+  text-align: center; font-family: var(--font-brush); font-size: 11px;
+  color: var(--sumi-soft); white-space: nowrap; width: 26%;
+}
+
+/* ---------- 重ね画面 ---------- */
+.overlay {
+  position: fixed; inset: 0; background: rgba(20, 15, 8, .62);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 18px 12px; overflow-y: auto; z-index: 60;
+}
+.overlay-card { width: 100%; max-width: 520px; position: relative; }
+.overlay-card .close {
+  position: absolute; top: 6px; right: 8px; width: 30px; height: 30px;
+  border: none; background: transparent; font-size: 22px; cursor: pointer; color: var(--sumi-soft);
+}
+.overlay-inner h2:first-child { margin-top: 0; }
+.overlay-inner.menu button.main { margin-top: 8px; }
+
+/* ---------- イベント ---------- */
+.event-card { position: relative; overflow: hidden; animation: evIn .45s cubic-bezier(.2, 1.3, .4, 1); padding: 18px 16px; }
+@keyframes evIn { from { opacity: 0; transform: scale(.94) translateY(12px); } to { opacity: 1; transform: none; } }
+.event-card::before {
+  content: ""; position: absolute; inset: 5px; border: 1px solid rgba(163, 44, 34, .26);
+  border-radius: 3px; pointer-events: none;
+}
+.ev-icon {
+  width: 50px; height: 50px; margin: 0 auto 8px; border-radius: 50%;
+  background: var(--akafusa); color: var(--washi);
+  font-family: var(--font-brush); font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .2);
+}
+.ev-title { font-family: var(--font-brush); font-size: 21px; text-align: center; letter-spacing: .12em; margin-bottom: 9px; }
+.ev-text { font-size: 13.5px; line-height: 2; }
+.ev-gain {
+  margin-top: 12px; padding: 8px; text-align: center; background: var(--washi-dim);
+  border-radius: 4px; font-weight: 700; font-size: 13px; color: var(--akafusa);
+}
+.sakura { position: absolute; top: -12px; font-size: 13px; color: #e79bb2; animation: fall 3.4s linear infinite; pointer-events: none; }
+@keyframes fall {
+  0% { transform: translateY(-20px) rotate(0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(300px) rotate(360deg); opacity: 0; }
+}
+
+/* ---------- タイトル・入門 ---------- */
+.title-screen { text-align: center; padding: 22px 16px 18px; }
+.brand-main { font-family: var(--font-brush); font-size: 40px; letter-spacing: .22em; }
+.brand-sub { font-family: var(--font-brush); font-size: 14px; letter-spacing: .3em; color: var(--sumi-soft); margin-top: 4px; }
+.title-art { margin: 14px 0; }
+.title-art .dohyo-stage { height: 180px; margin: 0; }
+.title-btns { margin-top: 4px; }
+.title-note { font-size: 11.5px; color: var(--sumi-soft); margin-top: 12px; line-height: 1.9; }
+.name-row { display: flex; gap: 8px; }
+.name-input {
+  flex: 1; font-family: var(--font-brush); font-size: 22px; padding: 8px 10px;
+  border: 2px solid var(--sumi); border-radius: 5px; background: #fff; color: var(--sumi);
+  min-width: 0;
+}
+.create-screen .panel { margin-bottom: 0; }
+
+/* ---------- 場所入り ---------- */
+.basho-hero { display: flex; gap: 12px; align-items: center; }
+.venue { font-family: var(--font-brush); font-size: 17px; flex: 1; }
+.venue span { display: block; font-family: var(--font-body); font-size: 11.5px; color: var(--sumi-soft); }
+.my-rank { text-align: center; }
+.my-rank .rank-full { font-size: 12.5px; }
+
+.ending { text-align: center; }
+.ending-name { font-family: var(--font-brush); font-size: 30px; letter-spacing: .16em; }
+.ending-best { font-size: 13px; color: var(--sumi-soft); margin: 4px 0 10px; }
+.ending .career-table { text-align: left; margin-top: 10px; }
+
+/* ---------- その他 ---------- */
+#sound-btn {
+  position: fixed; top: 10px; right: 10px; z-index: 80;
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--sumi); color: var(--washi); font-size: 15px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .3); opacity: .85;
+}
+#sound-btn.off { opacity: .4; }
+.toast {
+  position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%);
+  background: var(--sumi); color: var(--washi); padding: 8px 16px; border-radius: 20px;
+  font-size: 13px; z-index: 90; animation: pop .25s both;
+}
+footer { text-align: center; font-size: 10px; color: rgba(33, 26, 18, .48); margin-top: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wrestler, .stat .bar i { transition: none; }
+  .wrestler .breath, .mover, .t-dash, .t-slide, .steam span,
+  .eater .head-grp, .eater .jaw, .eater .belly, .bowl-arm { animation: none !important; }
+  .blog p, .event-card { animation: none; opacity: 1; }
+  .sakura { display: none; }
+}
+</style>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23211a12'/><circle cx='16' cy='16' r='8' fill='%23f8f2e2'/></svg>">
+</head>
+<body>
+<main id="app"></main>
+
+<script>
+/* ===== assets/js/util.js ===== */
+/* =====================================================================
+   白星街道 / util.js
+   ---------------------------------------------------------------------
+   乱数（シード可能）・数値整形・漢数字・DOM補助などの基礎ユーティリティ。
+   すべてのモジュールは global.SUMO 名前空間にぶら下がる（ビルド不要）。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+
+  /* ---------- 乱数 ----------
+     テスト再現性のためシード可能な mulberry32 を採用。
+     Math.random は直接使わず、必ずこの rng を経由する。            */
+  let _seed = (Date.now() ^ 0x9e3779b9) >>> 0;
+  let _next = mulberry32(_seed);
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0;
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /** 乱数シードを設定（テスト用）。 */
+  function seed(s) {
+    _seed = s >>> 0;
+    _next = mulberry32(_seed);
+  }
+  /** [0,1) の一様乱数。 */
+  const random = () => _next();
+  /** [a,b) の実数。 */
+  const rnd = (a, b) => a + _next() * (b - a);
+  /** [a,b] の整数。 */
+  const randInt = (a, b) => Math.floor(a + _next() * (b - a + 1));
+  /** 確率 p で true。 */
+  const chance = (p) => _next() < p;
+  /** 配列から1つ。 */
+  const pick = (arr) => arr[Math.floor(_next() * arr.length)];
+  /** 平均 m・標準偏差 sd の正規乱数（Box-Muller）。 */
+  function gauss(m, sd) {
+    let u = 0, v = 0;
+    while (u === 0) u = _next();
+    while (v === 0) v = _next();
+    return m + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  /** 重み付き抽選。items は {weight} を持つオブジェクトの配列。 */
+  function weightedPick(items, weightOf = (x) => x.weight) {
+    const total = items.reduce((s, x) => s + weightOf(x), 0);
+    if (total <= 0) return null;
+    let r = _next() * total;
+    for (const it of items) {
+      r -= weightOf(it);
+      if (r <= 0) return it;
+    }
+    return items[items.length - 1];
+  }
+  /** Fisher-Yates（破壊的でない）。 */
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(_next() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  /* ---------- 数値 ---------- */
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const fmt1 = (v) => Math.round(v * 10) / 10;
+  const sum = (arr, f = (x) => x) => arr.reduce((s, x) => s + f(x), 0);
+  /** ロジスティック関数。勝率算出に用いる。 */
+  const logistic = (x) => 1 / (1 + Math.exp(-x));
+  /** a→b を t で線形補間。 */
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* ---------- 文字列 ---------- */
+  const KAN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  /** 1〜99 の漢数字。番付の「枚目」表記に使う。 */
+  function kansuji(n) {
+    n = Math.floor(n);
+    if (n <= 0) return "";
+    if (n < 10) return KAN[n];
+    if (n >= 100) return String(n);
+    const t = Math.floor(n / 10), o = n % 10;
+    return (t > 1 ? KAN[t] : "") + "十" + (o ? KAN[o] : "");
+  }
+  const ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  /** HTML エスケープ。テンプレート埋め込み時は必ず通す。 */
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ESC_MAP[c]);
+  /** 符号付き表示（+5 / -3 / ±0）。 */
+  const signed = (n) => (n > 0 ? "+" + n : n < 0 ? String(n) : "±0");
+
+  /* ---------- 配列 ---------- */
+  /** キー関数で昇順ソート（非破壊）。 */
+  const sortBy = (arr, f) => arr.slice().sort((a, b) => f(a) - f(b));
+  /** キー関数で降順ソート（非破壊）。 */
+  const sortByDesc = (arr, f) => arr.slice().sort((a, b) => f(b) - f(a));
+
+  /* ---------- DOM ---------- */
+  const $ = (sel, root) => (root || global.document).querySelector(sel);
+  const prefersReducedMotion = () =>
+    typeof global.matchMedia === "function" &&
+    global.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  SUMO.util = {
+    seed, random, rnd, randInt, chance, pick, gauss, weightedPick, shuffle,
+    clamp, fmt1, sum, logistic, lerp,
+    kansuji, esc, signed,
+    sortBy, sortByDesc,
+    $, prefersReducedMotion,
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/data.js ===== */
+/* =====================================================================
+   白星街道 / data.js
+   ---------------------------------------------------------------------
+   ゲーム定数・マスタデータ。ロジックは持たない（純データ＋軽い述語）。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+  const U = SUMO.util;
+
+  /* ------------------------------------------------------------------
+     番付の階層。index が小さいほど下位。
+     size … その階級の定員（東西合計）
+     step … 一番の白星が動かす枚数の目安（幕下以下は大きく動く）
+     ------------------------------------------------------------------ */
+  const DIVISIONS = [
+    { id: "jonokuchi", name: "序ノ口", bouts: 7, size: 24, step: 7, sekitori: false },
+    { id: "jonidan", name: "序二段", bouts: 7, size: 60, step: 8, sekitori: false },
+    { id: "sandanme", name: "三段目", bouts: 7, size: 60, step: 7, sekitori: false },
+    { id: "makushita", name: "幕下", bouts: 7, size: 60, step: 5, sekitori: false },
+    { id: "juryo", name: "十両", bouts: 15, size: 28, step: 2.2, sekitori: true },
+    { id: "makuuchi", name: "幕内", bouts: 15, size: 42, step: 2.2, sekitori: true },
+  ];
+  const DIV = {};
+  DIVISIONS.forEach((d, i) => { d.index = i; DIV[d.id] = d; });
+  const MAKUUCHI = DIV.makuuchi.index;
+  const JURYO = DIV.juryo.index;
+  const MAKUSHITA = DIV.makushita.index;
+
+  /** 幕内の格。rank.title に入る。 */
+  const TITLES = {
+    Y: { key: "Y", name: "横綱", short: "横", order: 0, sanyaku: true, slots: 2 },
+    O: { key: "O", name: "大関", short: "大", order: 1, sanyaku: true, slots: 3 },
+    S: { key: "S", name: "関脇", short: "関", order: 2, sanyaku: true, slots: 2 },
+    K: { key: "K", name: "小結", short: "小", order: 3, sanyaku: true, slots: 2 },
+    M: { key: "M", name: "前頭", short: "前", order: 4, sanyaku: false, slots: 0 },
+  };
+
+  /* ---------- 年六場所 ---------- */
+  const BASHO = [
+    { name: "初場所", venue: "両国国技館", city: "東京", month: 1, season: "初春" },
+    { name: "春場所", venue: "エディオンアリーナ大阪", city: "大阪", month: 3, season: "春" },
+    { name: "夏場所", venue: "両国国技館", city: "東京", month: 5, season: "初夏" },
+    { name: "名古屋場所", venue: "IGアリーナ", city: "愛知", month: 7, season: "盛夏" },
+    { name: "秋場所", venue: "両国国技館", city: "東京", month: 9, season: "秋" },
+    { name: "九州場所", venue: "福岡国際センター", city: "福岡", month: 11, season: "初冬" },
+  ];
+
+  /* ---------- 取り口（型） ---------- */
+  const STYLES = {
+    oshi: {
+      id: "oshi", label: "突き押し", desc: "組まずに突き、押して出る。爆発力に賭ける型。",
+      bias: { push: 1.22, grip: 0.72, throw: 0.8, pull: 1.05 },
+      statBias: { power: 1.12, tachiai: 1.12, tech: 0.92, legs: 0.98 },
+    },
+    migi: {
+      id: "migi", label: "右四つ", desc: "右を差して寄る。腰の重さと寄りの正確さ。",
+      bias: { push: 0.9, grip: 1.25, throw: 1.15, pull: 0.85 },
+      statBias: { power: 1.02, tech: 1.08, legs: 1.08, tachiai: 0.94 },
+    },
+    hidari: {
+      id: "hidari", label: "左四つ", desc: "左差しから上手を引く。じっくり型の正統派。",
+      bias: { push: 0.88, grip: 1.28, throw: 1.12, pull: 0.85 },
+      statBias: { stamina: 1.08, tech: 1.06, legs: 1.08, tachiai: 0.94 },
+    },
+    waza: {
+      id: "waza", label: "技巧", desc: "いなし、引き、足技。力より業で勝負する変幻自在の型。",
+      bias: { push: 0.92, grip: 1.0, throw: 1.2, pull: 1.3 },
+      statBias: { tech: 1.16, legs: 1.06, power: 0.9, stamina: 0.98 },
+    },
+  };
+
+  /* ---------- 出身地 ---------- */
+  const REGIONS = [
+    { name: "北海道", bonus: { power: 3, stamina: 2 }, flavor: "雪深い漁師町の生まれ。" },
+    { name: "青森", bonus: { power: 3, mental: 2 }, flavor: "相撲どころ津軽の出。" },
+    { name: "秋田", bonus: { stamina: 3, legs: 2 }, flavor: "冬に鍛えた足腰がある。" },
+    { name: "石川", bonus: { tech: 3, legs: 2 }, flavor: "加賀の相撲熱に育った。" },
+    { name: "東京", bonus: { tech: 2, mental: 3 }, flavor: "国技館の音を聞いて育った。" },
+    { name: "大阪", bonus: { tachiai: 3, mental: 2 }, flavor: "喧嘩自慢の下町育ち。" },
+    { name: "鹿児島", bonus: { power: 2, tachiai: 3 }, flavor: "薩摩隼人の血を引く。" },
+    { name: "沖縄", bonus: { legs: 3, tech: 2 }, flavor: "角力（すもう）で鍛えた腰。" },
+    { name: "モンゴル", bonus: { tech: 3, mental: 3, legs: 2 }, flavor: "草原の相撲で育った。" },
+    { name: "ジョージア", bonus: { power: 4, tech: 2 }, flavor: "チダオバの投げを知る。" },
+    { name: "ブラジル", bonus: { stamina: 3, tachiai: 2 }, flavor: "日系三世。遠い海を渡ってきた。" },
+    { name: "ハワイ", bonus: { power: 5, tech: -2, stamina: 2 }, flavor: "規格外の巨体を持つ。" },
+  ];
+
+  /* ---------- 部屋 ---------- */
+  const HEYA = [
+    {
+      id: "araiso", name: "荒磯部屋", oyakata: "荒磯親方（元大関・磐城灘）",
+      desc: "押し相撲の名門。ぶつかり稽古は角界一きついと言われる。",
+      train: { butsukari: 1.25, teppo: 1.15 }, growth: { power: 1.1, tachiai: 1.08 },
+      color: "#a32c22",
+    },
+    {
+      id: "kagura", name: "神楽坂部屋", oyakata: "神楽坂親方（元関脇・玉ノ響）",
+      desc: "技を練る部屋。申し合いでは投げの打ち合いが絶えない。",
+      train: { moshiai: 1.25, sanban: 1.2 }, growth: { tech: 1.12, legs: 1.05 },
+      color: "#2e5e52",
+    },
+    {
+      id: "ganryu", name: "巌流部屋", oyakata: "巌流親方（元横綱・巌ノ島）",
+      desc: "横綱を三人育てた鬼の部屋。稽古量は多いが、身体は軋む。",
+      train: { shiko: 1.2, suriashi: 1.2, butsukari: 1.15 }, growth: { stamina: 1.1, mental: 1.08 },
+      fatigue: 1.12, color: "#2b2b33",
+    },
+    {
+      id: "tenryu", name: "天龍部屋", oyakata: "天龍親方（元小結・天龍洋）",
+      desc: "国際色ゆたかな新興部屋。稽古は合理的で、飯がうまい。",
+      train: { weight: 1.2, kenkyu: 1.3 }, growth: { mental: 1.1, tech: 1.05 },
+      fatigue: 0.92, color: "#b98a2f",
+    },
+    {
+      id: "shirasu", name: "白洲部屋", oyakata: "白洲親方（元前頭・白洲川）",
+      desc: "力士五人の小所帯。自分で考えて稽古する者しか伸びない。",
+      train: { degeiko: 1.35, kenkyu: 1.2 }, growth: { tech: 1.06, mental: 1.06 },
+      fatigue: 0.86, color: "#8d8570",
+    },
+  ];
+
+  /* ---------- 稽古 ----------
+     gain … 各能力の基礎上昇量 / fatigue … 疲労増減 / burn … 体重減
+     req  … 解禁条件（番付 index） / risk … 故障確率係数              */
+  const TRAININGS = {
+    shiko: {
+      id: "shiko", label: "四股", desc: "足腰と気迫。相撲の背骨。",
+      gain: { legs: 2.4, power: 1.2, mental: 1.0 }, fatigue: 8, burn: 0.6, risk: 0.2,
+    },
+    teppo: {
+      id: "teppo", label: "鉄砲", desc: "突っ張りの威力と立合いの鋭さ。",
+      gain: { power: 2.2, tachiai: 1.8 }, fatigue: 10, burn: 0.5, risk: 0.3,
+    },
+    suriashi: {
+      id: "suriashi", label: "すり足", desc: "腰を割って進む。寄りの土台。",
+      gain: { legs: 2.2, tech: 1.4, stamina: 0.8 }, fatigue: 7, burn: 0.9, risk: 0.15,
+    },
+    butsukari: {
+      id: "butsukari", label: "ぶつかり稽古", desc: "胸を借りて体力を絞る。息が上がる。",
+      gain: { stamina: 3.0, mental: 1.8, power: 1.0 }, fatigue: 20, burn: 1.4, risk: 1.0,
+    },
+    moshiai: {
+      id: "moshiai", label: "申し合い", desc: "勝ち抜きの実戦。技と読みが磨かれる。",
+      gain: { tech: 2.6, mental: 1.6, tachiai: 0.8 }, fatigue: 16, burn: 1.0, risk: 0.8,
+    },
+    sanban: {
+      id: "sanban", label: "三番稽古", desc: "同じ相手と繰り返す。型が固まる。",
+      gain: { tech: 3.2, legs: 1.2, stamina: 1.0 }, fatigue: 18, burn: 1.1, risk: 0.7,
+      req: 3, reqText: "幕下以上",
+    },
+    weight: {
+      id: "weight", label: "ウエイト", desc: "近代的な筋力強化。相撲勘は鈍る。",
+      gain: { power: 3.4, tech: -0.6 }, fatigue: 13, burn: 0.3, risk: 0.4,
+    },
+    degeiko: {
+      id: "degeiko", label: "出稽古", desc: "他所の胸を借りに行く。得るものは大きい。",
+      gain: { tech: 1.8, mental: 2.0, power: 1.2, tachiai: 1.2 }, fatigue: 22, burn: 1.3, risk: 0.9,
+      req: 3, reqText: "幕下以上",
+    },
+    kenkyu: {
+      id: "kenkyu", label: "取組研究", desc: "映像を見る。相手の癖が見えてくる。",
+      gain: { tech: 1.2, mental: 1.0 }, fatigue: 2, burn: -0.2, risk: 0,
+      scouting: true,
+    },
+    rest: {
+      id: "rest", label: "休養", desc: "身体を休める。稽古を休む勇気も要る。",
+      gain: {}, fatigue: -32, burn: -0.9, risk: 0, heal: 8,
+    },
+    chiryo: {
+      id: "chiryo", label: "治療", desc: "医者と鍼。故障を癒やすことに専念する。",
+      gain: {}, fatigue: -14, burn: -0.3, risk: 0, heal: 26,
+    },
+  };
+
+  /* ---------- ちゃんこ ---------- */
+  const CHANKO = {
+    meat: { id: "meat", label: "肉ちゃんこ", desc: "体重が乗る。筋力も付く。", gain: { power: 1.0 }, weight: 1.6 },
+    fish: { id: "fish", label: "魚ちゃんこ", desc: "身が締まる。技のキレ。", gain: { tech: 1.0 }, weight: 0.9 },
+    veg: { id: "veg", label: "野菜ちゃんこ", desc: "疲れが抜ける。体重は増えにくい。", gain: { stamina: 1.0 }, weight: 0.3, fatigue: -6 },
+    soup: { id: "soup", label: "ソップ炊き", desc: "鶏がら。足腰に効くと言われる。", gain: { legs: 1.0, stamina: 0.5 }, weight: 0.7 },
+  };
+  const AMOUNTS = {
+    light: { id: "light", label: "控えめ", wMul: 0.35, gMul: 0.7, fatigue: 0 },
+    normal: { id: "normal", label: "普通", wMul: 1.0, gMul: 1.0, fatigue: -2 },
+    big: { id: "big", label: "大盛り", wMul: 2.2, gMul: 1.35, fatigue: -4 },
+  };
+
+  /* ---------- 立合い ---------- */
+  const TACHIAI = {
+    atari: { id: "atari", label: "当たる", desc: "正面から思い切りぶちかます。", power: 1.15, risk: 0, gripBias: 0 },
+    kachiage: { id: "kachiage", label: "かち上げ", desc: "肘で顎を跳ね上げ、体を起こす。", power: 1.25, risk: 0.18, gripBias: -0.15 },
+    sashi: { id: "sashi", label: "差しにいく", desc: "低く踏み込み、まわしを狙う。", power: 0.92, risk: 0.1, gripBias: 0.45 },
+    uke: { id: "uke", label: "受けて立つ", desc: "相手の当たりを吸収し、二の矢を待つ。", power: 0.85, risk: -0.1, gripBias: 0.12 },
+    henka: { id: "henka", label: "変化", desc: "立合いで飛ぶ大博打。決まれば一瞬。", power: 0, risk: 1, gripBias: 0 },
+  };
+
+  /* ---------- 作戦 ---------- */
+  const PLANS = {
+    zenshin: { id: "zenshin", label: "前へ出る", desc: "圧力で押し込む。", aggr: 1.25, defend: 0.85 },
+    kumi: { id: "kumi", label: "組み止める", desc: "まわしを引いてから勝負。", aggr: 0.95, defend: 1.05, grip: 1.35 },
+    keisei: { id: "keisei", label: "形勢を見る", desc: "無理をせず、相手の型を外す。", aggr: 0.85, defend: 1.25 },
+  };
+
+  /* ---------- 決まり手 ----------
+     取組エンジンが返す「勝ち筋 kind」と局面から選ぶ。               */
+  const KIMARITE = {
+    push_out: ["押し出し", "突き出し", "送り出し"],
+    push_down: ["押し倒し", "突き倒し", "浴びせ倒し"],
+    yori_out: ["寄り切り", "極め出し", "送り出し"],
+    yori_down: ["寄り倒し", "浴びせ倒し", "極め倒し"],
+    throw_uwate: ["上手投げ", "上手出し投げ", "小手投げ"],
+    throw_shitate: ["下手投げ", "掬い投げ", "下手出し投げ"],
+    throw_misc: ["首投げ", "一本背負い", "腰投げ"],
+    pull: ["はたき込み", "引き落とし", "肩透かし"],
+    trip: ["内掛け", "外掛け", "河津掛け", "蹴手繰り"],
+    counter: ["うっちゃり", "突き落とし", "巻き落とし", "居反り"],
+    slip: ["勇み足", "腰砕け", "つき手"],
+  };
+  /** 技能賞の評価が高い決まり手（技巧的なもの）。 */
+  const TECHNICAL_KIMARITE = new Set([
+    ...KIMARITE.throw_uwate, ...KIMARITE.throw_shitate, ...KIMARITE.throw_misc,
+    ...KIMARITE.trip, ...KIMARITE.counter, "肩透かし", "極め出し",
+  ]);
+
+  /* 入門先には選べないが、角界には他にも部屋がある（同部屋対戦の回避に効く）。 */
+  const EXTRA_HEYA = [
+    "追手風", "花籠", "湊川", "伊勢ノ濱", "二子山", "出羽ノ井", "春日森", "錦戸",
+    "八角原", "陸奥浦", "浅香山", "宮城崎", "武隈", "山響", "阿武洲", "尾車",
+    "境川端", "木瀬川", "立浪辺", "高砂原", "田子ノ島", "藤島", "峰崎", "常盤山",
+  ].map((n) => ({ id: "x_" + n, name: n + "部屋", npcOnly: true, color: "#6b6355" }));
+  const ALL_HEYA = HEYA.concat(EXTRA_HEYA);
+  const HEYA_BY_ID = {};
+  ALL_HEYA.forEach((h) => { HEYA_BY_ID[h.id] = h; });
+  const heyaName = (id) => (HEYA_BY_ID[id] ? HEYA_BY_ID[id].name : "―");
+
+  /* ---------- 四股名の部品 ---------- */
+  const SHIKONA_A = [
+    "大", "若", "琴", "照", "豊", "朝", "玉", "武", "千代", "貴", "常", "天", "白", "黒", "金",
+    "高", "神", "剛", "隼", "錦", "松", "鶴", "龍", "虎", "巌", "荒", "陸", "雷", "霧", "旭",
+    "阿", "北", "南", "東", "西", "碧", "紅", "真", "鳴", "清",
+  ];
+  const SHIKONA_B = [
+    "ノ海", "ノ里", "ノ山", "ノ花", "ノ富士", "嶽", "錦", "龍", "鵬", "城", "川", "岩", "洋",
+    "風", "光", "山", "桜", "王", "剛", "心", "響", "星", "翔", "州", "灘", "波", "嶺", "丸",
+  ];
+
+  /* ---------- 人生イベント ----------
+     cond … 発生条件 / weight … 抽選重み / once … 一度きり
+     effect … 状態を書き換え、獲得表示用の文字列を返す               */
+  const EVENTS = [
+    {
+      id: "shindeshi", title: "新弟子検査", once: true, weight: 200, icon: "初",
+      cond: (g) => g.player.career.basho === 0,
+      text: (g) => `身長と体重を測られ、握力を測られ、簡単な運動をさせられた。合格。${g.player.name}という四股名を、親方が半紙に書いてくれた。`,
+      effect: (g) => { g.player.stats.mental += 4; return "気迫 +4"; },
+      sfx: "event",
+    },
+    {
+      id: "okamisan", title: "ちゃんこ屋の娘", once: true, weight: 12, icon: "❀",
+      cond: (g) => g.player.rank.div >= 3 && g.bashoCount >= 3,
+      text: (g) => `場所後に通うちゃんこ屋に、後援会長の姪だという娘がいた。${g.player.name}が負けた日も、彼女は同じ顔で「おかわりは」と聞く。名を、しづ、といった。`,
+      effect: (g) => { g.flags.metWife = true; g.player.stats.mental += 6; return "気迫 +6"; },
+      sfx: "event",
+    },
+    {
+      id: "kekkon", title: "祝言", once: true, weight: 120, icon: "❁",
+      cond: (g) => g.flags.metWife && g.player.rank.div >= 4,
+      text: (g) => `関取となった${g.player.name}は、しづを娶った。祝言の席で親方が言う。「所帯を持つと、力士は強くなる。守るもんができるからな」。以後、支度部屋に握り飯が届くようになった。`,
+      effect: (g) => { g.flags.married = true; g.player.stats.mental += 14; return "気迫 +14／日々の疲労回復が向上"; },
+      sfx: "wedding",
+    },
+    {
+      id: "kodomo", title: "長男誕生", once: true, weight: 90, icon: "◍",
+      cond: (g) => g.flags.married && g.bashoCount >= 8,
+      text: (g) => `朝稽古の最中に報せが来た。母子ともに健康。${g.player.name}は四股を踏む足を止めず、ただ一度だけ、深く息を吐いた。`,
+      effect: (g) => { g.player.stats.mental += 12; g.player.fatigue -= 15; return "気迫 +12／疲労 -15"; },
+      sfx: "event",
+    },
+    {
+      id: "tanimachi", title: "タニマチがついた", weight: 22, icon: "金",
+      cond: (g) => g.player.rank.div >= 3,
+      text: () => `地元の後援会長が支度部屋に現れ、分厚い封筒を置いていった。「ちゃんこの肉を、いいのに替えなさい」。`,
+      effect: (g) => { g.player.weight += 1.5; g.player.stats.power += 4; return "筋力 +4／体重 +1.5kg"; },
+      sfx: "event",
+    },
+    {
+      id: "oyakata", title: "親方の説教", weight: 20, icon: "喝",
+      cond: (g) => g.player.fatigue >= 55,
+      text: (g) => `「稽古は嘘をつかんが、身体も嘘をつかん」。${g.heya.oyakata}は${g.player.name}を土俵の外に座らせ、一日、他人の相撲だけを見せた。`,
+      effect: (g) => { g.player.fatigue -= 30; g.player.stats.tech += 5; return "疲労 -30／技術 +5"; },
+      sfx: "event",
+    },
+    {
+      id: "raibaru", title: "好敵手あらわる", once: true, weight: 40, icon: "敵",
+      cond: (g) => g.player.career.basho >= 3,
+      text: (g) => {
+        const r = g.rivalName || "同年の力士";
+        return `出稽古先に、同じ年の${r}がいた。三十番取って、二十三番負けた。帰りの電車で、${g.player.name}は初めて悔しさで眠れなかった。`;
+      },
+      effect: (g) => { g.player.stats.mental += 8; g.player.stats.tech += 6; return "気迫 +8／技術 +6"; },
+      sfx: "event",
+    },
+    {
+      id: "kega_hiza", title: "膝に嫌な音", weight: 18, icon: "痛",
+      cond: (g) => g.player.fatigue >= 62 && !g.player.injury,
+      text: () => `ぶつかり稽古の途中、右膝に鈍い音が走った。医者は「体重を落とせ」とだけ言った。`,
+      effect: (g) => { g.injure("右膝", 2); return "右膝を痛めた（軽度の故障）"; },
+      sfx: "sad",
+    },
+    {
+      id: "keshomawashi", title: "化粧廻しの贈呈", once: true, weight: 80, icon: "錦",
+      cond: (g) => g.player.rank.div >= 4,
+      text: () => `後援会から化粧廻しが贈られた。金糸で織られた昇り龍。土俵入りで初めてそれを締めたとき、客席がどよめいた。`,
+      effect: (g) => { g.player.stats.mental += 10; return "気迫 +10"; },
+      sfx: "event",
+    },
+    {
+      id: "tsukebito", title: "付け人がついた", once: true, weight: 90, icon: "従",
+      cond: (g) => g.player.rank.div >= 4,
+      text: () => `関取昇進とともに、序ノ口の若い衆が付け人についた。荷物を持たれるのは、どうにも尻の据わりが悪い。`,
+      effect: (g) => { g.player.fatigue -= 18; g.player.stats.mental += 6; return "疲労 -18／気迫 +6"; },
+      sfx: "event",
+    },
+    {
+      id: "oicho", title: "大銀杏を結う", once: true, weight: 100, icon: "髷",
+      cond: (g) => g.player.rank.div >= 4,
+      text: (g) => `床山が${g.player.name}の髷に鬢付け油を塗り込み、銀杏の葉の形に広げていった。鏡の中の男は、もう昨日までの男ではなかった。`,
+      effect: (g) => { g.player.stats.mental += 8; return "気迫 +8"; },
+      sfx: "event",
+    },
+    {
+      id: "jungyo", title: "地方巡業", weight: 20, icon: "旅",
+      cond: (g) => g.player.rank.div >= 4,
+      text: () => `巡業で全国を回った。子どもたちに稽古をつけ、握手をし、写真に写る。疲れはしたが、相撲が誰のものかを思い出した。`,
+      effect: (g) => { g.player.stats.mental += 8; g.player.stats.tech += 4; g.player.fatigue += 10; return "気迫 +8／技術 +4／疲労 +10"; },
+      sfx: "event",
+    },
+    {
+      id: "haha", title: "故郷からの便り", weight: 16, icon: "文",
+      cond: (g) => g.bashoCount >= 2,
+      text: () => `母から手紙が届いた。畑のこと、犬のこと、近所の誰それのこと。相撲のことは、最後の一行だけだった。「無理はせんように」。`,
+      effect: (g) => { g.player.stats.mental += 7; g.player.fatigue -= 10; return "気迫 +7／疲労 -10"; },
+      sfx: "event",
+    },
+    {
+      id: "danpatsu_senpai", title: "兄弟子の断髪式", weight: 14, icon: "鋏", once: true,
+      cond: (g) => g.player.career.basho >= 6,
+      text: (g) => `十年、番付を上げられなかった兄弟子が髷を落とした。最後の鋏は${g.heya.oyakata}が入れた。誰も泣かなかったが、誰も顔を上げなかった。`,
+      effect: (g) => { g.player.stats.mental += 11; return "気迫 +11"; },
+      sfx: "sad",
+    },
+    {
+      id: "shinjo", title: "新弟子が入った", weight: 15, icon: "新",
+      cond: (g) => g.player.rank.div >= 3,
+      text: (g) => `中学を出たばかりの少年が入門してきた。${g.player.name}の四股を、口を開けて見ている。教えるという行為は、思いのほか自分に効いた。`,
+      effect: (g) => { g.player.stats.tech += 5; g.player.stats.mental += 5; return "技術 +5／気迫 +5"; },
+      sfx: "event",
+    },
+    {
+      id: "taijuu", title: "体重計の前で", weight: 14, icon: "量",
+      cond: (g) => g.player.weight >= 185,
+      text: () => `番付が上がるほど、身体は重くなった。医者は血圧の数字を指で叩き、それから何も言わずに紙を裏返した。`,
+      effect: (g) => { g.player.stats.stamina -= 4; return "スタミナ -4（体重過多の警告）"; },
+      sfx: "sad",
+    },
+    {
+      id: "kensho", title: "懸賞旗が回る", weight: 18, icon: "賞",
+      cond: (g) => g.player.rank.div >= 5,
+      text: (g) => `${g.player.name}の一番に懸賞旗が十本ついた。土俵上で手刀を切って受け取る。掌の厚みが、そのまま生活の重さになった。`,
+      effect: (g) => { g.player.stats.mental += 9; return "気迫 +9"; },
+      sfx: "event",
+    },
+    {
+      id: "slump", title: "相撲を見失う", weight: 16, icon: "迷",
+      cond: (g) => g.player.career.basho >= 5 && g.player.stats.mental >= 60,
+      text: (g) => `勝ち方が分からなくなった。稽古場では強いのに、土俵に上がると足が出ない。${g.heya.oyakata}は「考えるな」とだけ言った。`,
+      effect: (g) => { g.player.stats.mental -= 8; g.player.stats.tech += 8; return "気迫 -8／技術 +8"; },
+      sfx: "sad",
+    },
+    {
+      id: "sekitori_meshi", title: "関取の食卓", once: true, weight: 60, icon: "膳",
+      cond: (g) => g.player.rank.div >= 4,
+      text: () => `ちゃんこ番から解放され、上座に座らされた。同じ鍋なのに、味が違って感じる。うまいとは、少し違う味だった。`,
+      effect: (g) => { g.player.weight += 2.0; g.player.stats.stamina += 5; return "体重 +2.0kg／スタミナ +5"; },
+      sfx: "event",
+    },
+    {
+      id: "zenshou_yume", title: "夢を見た", weight: 12, icon: "夢",
+      cond: (g) => g.bashoCount >= 4,
+      text: (g) => `満員の国技館で、${g.player.name}は誰にも負けなかった。目が覚めると午前四時で、外はまだ暗く、稽古場の板は冷たかった。`,
+      effect: (g) => { g.player.stats.mental += 10; return "気迫 +10"; },
+      sfx: "event",
+    },
+  ];
+
+  /* ---------- 引退後の年寄名跡 ---------- */
+  const TOSHIYORI = ["白星", "常盤", "松風", "大鳴", "浦嶋", "鏡岩", "北陣", "峰崎", "立川", "音羽"];
+
+  SUMO.data = {
+    DIVISIONS, DIV, MAKUUCHI, JURYO, MAKUSHITA, TITLES, BASHO,
+    STYLES, REGIONS, HEYA, EXTRA_HEYA, ALL_HEYA, HEYA_BY_ID, heyaName,
+    TRAININGS, CHANKO, AMOUNTS, TACHIAI, PLANS,
+    KIMARITE, TECHNICAL_KIMARITE, SHIKONA_A, SHIKONA_B, EVENTS, TOSHIYORI,
+    STAT_KEYS: ["power", "tech", "stamina", "mental", "tachiai", "legs"],
+    STAT_LABELS: {
+      power: "筋力", tech: "技術", stamina: "体力",
+      mental: "気迫", tachiai: "立合い", legs: "足腰",
+    },
+    STAT_CAP: 200,
+    KEIKO_DAYS: 12,
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/sfx.js ===== */
+/* =====================================================================
+   白星街道 / sfx.js
+   ---------------------------------------------------------------------
+   Web Audio API による合成音。音声ファイルを一切持たない。
+   櫓太鼓・拍子木・立合いの衝突・歓声などをその場で合成する。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+
+  let ctx = null;
+  let on = true;
+  let master = null;
+
+  function ac() {
+    if (typeof global.AudioContext === "undefined" && typeof global.webkitAudioContext === "undefined") return null;
+    if (!ctx) {
+      const C = global.AudioContext || global.webkitAudioContext;
+      ctx = new C();
+      master = ctx.createGain();
+      master.gain.value = 0.9;
+      master.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  /** 単音。slideTo を与えると周波数が滑る。 */
+  function tone(freq, dur, type = "sine", vol = 0.25, slideTo = null, delay = 0) {
+    const c = ac();
+    if (!c || !on) return;
+    const t0 = c.currentTime + delay;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t0);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(master);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+
+  /** 減衰するノイズ。打撃音の芯に使う。 */
+  function noise(dur, vol = 0.3, filterFreq = 1200, delay = 0, q = 1) {
+    const c = ac();
+    if (!c || !on) return;
+    const t0 = c.currentTime + delay;
+    const n = Math.floor(c.sampleRate * dur);
+    const buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = c.createBufferSource(); src.buffer = buf;
+    const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = filterFreq; f.Q.value = q;
+    const g = c.createGain();
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t0);
+  }
+
+  const Sfx = {
+    toggle() { on = !on; if (on) tone(880, 0.08, "sine", 0.2); return on; },
+    isOn() { return on; },
+    resume() { ac(); },
+
+    tap() { tone(660, 0.05, "triangle", 0.12); },
+    /** 櫓太鼓。 */
+    taiko(delay = 0, vol = 0.42) { tone(78, 0.34, "sine", vol, 42, delay); noise(0.09, vol * 0.5, 420, delay); },
+    /** 拍子木。 */
+    ki(delay = 0) { noise(0.05, 0.36, 5200, delay, 6); tone(2100, 0.05, "square", 0.1, 1500, delay); },
+    /** 立合いの激突。 */
+    clash(delay = 0) { noise(0.22, 0.5, 760, delay); tone(120, 0.2, "sawtooth", 0.24, 50, delay); },
+    /** 押し合い。 */
+    push(delay = 0) { noise(0.11, 0.2, 540, delay); },
+    /** 倒れる。 */
+    fall(delay = 0) { noise(0.4, 0.45, 300, delay); tone(90, 0.36, "sine", 0.26, 38, delay); },
+    /** 歓声。 */
+    cheer(delay = 0, len = 1.5, vol = 0.2) {
+      const c = ac();
+      if (!c || !on) return;
+      const t0 = c.currentTime + delay, n = Math.floor(c.sampleRate * len);
+      const buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) {
+        const env = Math.min(1, i / (n * 0.12)) * Math.max(0, 1 - i / n);
+        d[i] = (Math.random() * 2 - 1) * env;
+      }
+      const src = c.createBufferSource(); src.buffer = buf;
+      const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1000; f.Q.value = 0.7;
+      const g = c.createGain(); g.gain.value = vol;
+      src.connect(f); f.connect(g); g.connect(master);
+      src.start(t0);
+    },
+    /** 四股の踏み下ろし。 */
+    stomp(delay = 0) { tone(64, 0.22, "sine", 0.3, 34, delay); noise(0.08, 0.2, 340, delay); },
+    /** 突っ張り。 */
+    slap(delay = 0) { noise(0.07, 0.26, 2400, delay, 3); },
+    slurp(delay = 0) { tone(300, 0.16, "sine", 0.09, 620, delay); noise(0.13, 0.12, 900, delay); },
+    chew(delay = 0) { noise(0.06, 0.14, 700, delay, 2); },
+    boil(delay = 0) { for (let i = 0; i < 5; i++) noise(0.05, 0.06, 480, delay + i * 0.17, 2); },
+    gain(delay = 0) { [523, 659, 784].forEach((f, i) => tone(f, 0.16, "triangle", 0.15, null, delay + i * 0.07)); },
+    /** 昇進の触れ太鼓。 */
+    fanfare() {
+      [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.4, "square", 0.14, null, i * 0.14));
+      this.taiko(0, 0.4); this.cheer(0.2, 2.2, 0.18);
+    },
+    sad() { [440, 392, 330, 262].forEach((f, i) => tone(f, 0.42, "sine", 0.18, null, i * 0.16)); },
+    event() { [659, 880, 1046].forEach((f, i) => tone(f, 0.3, "triangle", 0.14, null, i * 0.1)); this.ki(0); },
+    wedding() {
+      [523, 587, 659, 784, 880, 1046].forEach((f, i) => tone(f, 0.5, "sine", 0.13, null, i * 0.16));
+      this.cheer(0.4, 2.4, 0.16); this.ki(0); this.ki(0.12);
+    },
+    /** 呼出しの拍子木＋触れ太鼓（場所の始まり）。 */
+    open() { this.ki(0); this.ki(0.18); this.taiko(0.5, 0.45); this.taiko(0.95, 0.4); },
+  };
+
+  SUMO.sfx = Sfx;
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/rikishi.js ===== */
+/* =====================================================================
+   白星街道 / rikishi.js
+   ---------------------------------------------------------------------
+   力士データモデル。生成・成長・加齢・体調・実力値の算出。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+  const U = SUMO.util;
+  const D = SUMO.data;
+
+  let _idSeq = 1;
+
+  /** 実力値を構成する各能力の重み（合計 1.0）。 */
+  const W = { power: 0.26, tech: 0.24, stamina: 0.15, mental: 0.13, tachiai: 0.11, legs: 0.11 };
+
+  /* 番付位置 → その地位に相応しい実力値。番付表の「厚み」を決める骨格。 */
+  const ANCHORS = [
+    [0, 150], [10, 139], [20, 127], [26, 121], [32, 113], [48, 103], [65, 95],
+    [100, 85], [127, 72], [200, 62], [258, 44], [300, 40], [400, 36], [458, 28],
+    [600, 25], [658, 19], [800, 17], [824, 12],
+  ];
+  /** rankValue から標準実力値を補間する。 */
+  function parStrength(rankValue) {
+    if (rankValue <= ANCHORS[0][0]) return ANCHORS[0][1];
+    for (let i = 1; i < ANCHORS.length; i++) {
+      const [x1, y1] = ANCHORS[i], [x0, y0] = ANCHORS[i - 1];
+      if (rankValue <= x1) return U.lerp(y0, y1, (rankValue - x0) / (x1 - x0));
+    }
+    return ANCHORS[ANCHORS.length - 1][1];
+  }
+
+  /* ---------- 体重補正 ----------
+     軽すぎれば当たり負けし、重すぎれば息が上がる。155kg 前後が最適。 */
+  function weightMod(w) {
+    if (w >= 140 && w <= 172) return 1 + (1 - Math.abs(w - 156) / 16) * 0.05;
+    const over = w > 172 ? w - 172 : 140 - w;
+    return Math.max(0.76, 1 - over * 0.0042);
+  }
+  function weightHint(w) {
+    if (w < 120) return "軽量。当たり負けする";
+    if (w < 140) return "やや軽い";
+    if (w <= 172) return "適正。よく動ける";
+    if (w <= 192) return "重い。息が上がりやすい";
+    return "重すぎる。膝が心配だ";
+  }
+
+  /* ---------- 年齢曲線 ---------- */
+  /** 加齢による実力補正。26〜29歳が全盛。 */
+  function ageMod(age) {
+    if (age < 20) return 0.94 + (age - 17) * 0.02;
+    if (age <= 29) return 1.0;
+    return Math.max(0.72, 1 - (age - 29) * 0.035);
+  }
+  /** 加齢による成長率。若いほど伸びる。 */
+  function growthMod(age) {
+    if (age <= 20) return 1.35;
+    if (age <= 24) return 1.15;
+    if (age <= 28) return 0.95;
+    if (age <= 31) return 0.7;
+    return 0.45;
+  }
+
+  /* ---------- 体調 ---------- */
+  /** 疲労と故障を織り込んだコンディション係数（0.5〜1.0）。 */
+  function condition(r) {
+    let c = 1 - r.fatigue / 260;
+    if (r.injury) c *= 1 - r.injury.severity * 0.09;
+    return U.clamp(c, 0.5, 1);
+  }
+
+  /** 素の実力値（能力の加重平均）。 */
+  function rawStrength(r) {
+    let s = 0;
+    for (const k in W) s += (r.stats[k] || 0) * W[k];
+    return s;
+  }
+  /** 取組で用いる総合実力値。体重・年齢・体調を織り込む。 */
+  function strength(r) {
+    return rawStrength(r) * weightMod(r.weight) * ageMod(r.age) * condition(r);
+  }
+
+  /* ---------- 生成 ---------- */
+  const usedNames = new Set();
+  function makeShikona() {
+    for (let i = 0; i < 200; i++) {
+      const n = U.pick(D.SHIKONA_A) + U.pick(D.SHIKONA_B);
+      if (!usedNames.has(n)) { usedNames.add(n); return n; }
+    }
+    return U.pick(D.SHIKONA_A) + U.pick(D.SHIKONA_B) + U.randInt(2, 9);
+  }
+  function reserveName(n) { usedNames.add(n); }
+  function resetNames() { usedNames.clear(); }
+
+  function blankCareer() {
+    return {
+      basho: 0, wins: 0, losses: 0, absences: 0,
+      makuuchiWins: 0, makuuchiLosses: 0,
+      sekitoriBasho: 0, makuuchiBasho: 0, sanyakuBasho: 0,
+      yusho: [], junYusho: 0,
+      sansho: { shukun: 0, kanto: 0, ginou: 0 },
+      kinboshi: 0,
+      bestRank: null,
+      streak: 0, maxStreak: 0,
+      kachikoshi: 0, makekoshi: 0,
+    };
+  }
+
+  /**
+   * 力士を1体生成する。
+   * @param {object} o - {rank, age, style, heya, region, name, isPlayer, spread}
+   */
+  function create(o = {}) {
+    const rank = o.rank || { div: 0, title: null, num: 12, side: "E" };
+    const rv = SUMO.banzuke.rankValue(rank);
+    const par = o.strength != null ? o.strength : parStrength(rv) * (o.spread == null ? U.rnd(0.9, 1.1) : o.spread);
+    const style = o.style || U.pick(Object.keys(D.STYLES));
+    const bias = D.STYLES[style].statBias || {};
+    const age = o.age != null ? o.age : U.clamp(Math.round(U.gauss(23 - (5 - rank.div) * 0.8, 3)), 16, 37);
+
+    const stats = {};
+    let acc = 0;
+    for (const k of D.STAT_KEYS) {
+      const m = (bias[k] || 1) * U.rnd(0.82, 1.18);
+      stats[k] = m;
+      acc += m * W[k];
+    }
+    // 加重平均が par / (体重・年齢補正) になるよう正規化する
+    const wt = o.weight != null ? o.weight
+      : U.clamp(Math.round(U.gauss(138 + rank.div * 6.5, 17)), 95, 215);
+    const norm = par / Math.max(0.001, acc * weightMod(wt) * ageMod(age));
+    for (const k of D.STAT_KEYS) stats[k] = U.clamp(Math.round(stats[k] * norm), 5, D.STAT_CAP);
+
+    // 素質。若いうちはこの値に向かって伸び、届かぬまま終わる者も多い。
+    const potential = o.potential != null
+      ? o.potential
+      : U.clamp(par * (1 + Math.max(0, 26 - age) * 0.028) * U.rnd(0.9, 1.1), par * 0.92, 162);
+
+    const r = {
+      id: o.id || "r" + _idSeq++,
+      name: o.name || makeShikona(),
+      isPlayer: !!o.isPlayer,
+      potential,
+      heya: o.heya || U.pick(D.ALL_HEYA).id,
+      region: o.region || U.pick(D.REGIONS).name,
+      style,
+      age,
+      height: o.height != null ? o.height : U.clamp(Math.round(U.gauss(183, 6)), 168, 202),
+      weight: wt,
+      stats,
+      fatigue: 0,
+      injury: null,
+      rank,
+      prevRank: null,
+      kadoban: false,
+      retired: false,
+      debutBasho: 0,
+      basho: null,          // 場所中の成績 {w,l,a,results:[]}
+      sanyakuStreak: [],    // 大関取りの直近三役成績
+      career: blankCareer(),
+    };
+    r.career.bestRank = { ...rank };
+    return r;
+  }
+
+  /* ---------- 成長・回復 ---------- */
+  /**
+   * 稽古などによる能力上昇。
+   * 上限に近いほど伸びにくく（成長逓減）、さらに素質に届いた者は
+   * そこから先はほとんど伸びない。稽古は嘘をつかないが、器は覆せない。
+   */
+  function applyGain(r, gains, mul = 1, heyaGrowth = null) {
+    const out = {};
+    const pot = r.potential || D.STAT_CAP;
+    const room = U.clamp((pot * 1.05 - rawStrength(r)) / (pot * 0.32), 0, 1);
+    const potMul = 0.05 + 0.95 * room;
+    for (const k in gains) {
+      const g = gains[k];
+      if (!g) continue;
+      const cap = D.STAT_CAP;
+      const soft = g > 0 ? Math.max(0.15, 1 - r.stats[k] / (cap * 1.15)) * potMul : 1;
+      const hm = heyaGrowth && heyaGrowth[k] ? heyaGrowth[k] : 1;
+      const delta = g * mul * soft * hm * growthMod(r.age);
+      const before = r.stats[k];
+      r.stats[k] = U.clamp(r.stats[k] + delta, 1, cap);
+      out[k] = r.stats[k] - before;
+    }
+    return out;
+  }
+
+  /** 故障を負わせる。 */
+  function injure(r, part, severity) {
+    if (r.injury && r.injury.severity >= severity) {
+      r.injury.severity = U.clamp(r.injury.severity + 0.5, 1, 3);
+      return r.injury;
+    }
+    r.injury = { part, severity: U.clamp(severity, 1, 3) };
+    return r.injury;
+  }
+  /** 故障の回復。amount は 0〜100 の治癒量。 */
+  function heal(r, amount) {
+    if (!r.injury) return;
+    r.injury.severity -= amount / 34;
+    if (r.injury.severity <= 0.25) r.injury = null;
+  }
+
+  /** 場所間の経年変化（NPC・プレイヤー共通）。 */
+  function agePassBasho(r, bashoIdx) {
+    if (bashoIdx === 0) r.age += 1;   // 初場所で歳を取る
+  }
+
+  /* ---------- 表示補助 ---------- */
+  const styleLabel = (r) => D.STYLES[r.style].label;
+  function typeLabel(r) {
+    const s = r.stats;
+    if (s.power > s.tech + 12) return "突き押し型";
+    if (s.tech > s.power + 12) return "四つ相撲型";
+    if (s.tachiai > (s.power + s.tech) / 2 + 8) return "立合い鋭い";
+    return "バランス型";
+  }
+
+  /** 親方の見立て。素質を数値で見せず、言葉で伝える。 */
+  function scoutLabel(potential) {
+    if (potential >= 154) return { text: "百年に一人の器かもしれん", cls: "s5" };
+    if (potential >= 144) return { text: "大器だ。上まで行ける", cls: "s4" };
+    if (potential >= 131) return { text: "見どころがある", cls: "s3" };
+    if (potential >= 118) return { text: "稽古次第だな", cls: "s2" };
+    return { text: "身体は小さいが、性根はよさそうだ", cls: "s1" };
+  }
+
+  SUMO.rikishi = {
+    W, parStrength, weightMod, weightHint, ageMod, growthMod, condition, scoutLabel,
+    rawStrength, strength, create, makeShikona, reserveName, resetNames,
+    applyGain, injure, heal, agePassBasho, styleLabel, typeLabel, blankCareer,
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/banzuke.js ===== */
+/* =====================================================================
+   白星街道 / banzuke.js
+   ---------------------------------------------------------------------
+   番付モデル。全力士は「通し順位 slot」を持ち、そこから地位を導出する。
+   場所後は成績に応じて slot を動かし、番付を編成し直す。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+  const U = SUMO.util;
+  const D = SUMO.data;
+
+  const MAKUUCHI_SIZE = D.DIV.makuuchi.size;   // 42
+  const JURYO_SIZE = D.DIV.juryo.size;         // 28
+  /** 各段の開始 slot（1 始まり）。 */
+  const DIV_START = (() => {
+    const out = {};
+    let s = 1;
+    for (let i = D.DIVISIONS.length - 1; i >= 0; i--) {
+      const d = D.DIVISIONS[i];
+      out[d.index] = s;
+      s += d.size;
+    }
+    return out;
+  })();
+  const TOTAL_SLOTS = D.DIVISIONS.reduce((s, d) => s + d.size, 0);
+
+  /** 一番の勝ち越し／負け越しが動かす順位幅と、その上限。 */
+  const STEP = { 5: 2.2, 4: 2.2, 3: 3.6, 2: 6.5, 1: 8.0, 0: 6.0 };
+  const CAP = { 5: 20, 4: 20, 3: 20, 2: 38, 1: 44, 0: 30 };
+
+  /* ---------- slot ⇄ 地位 ---------- */
+
+  /** slot が属する段の index を返す。 */
+  function divOfSlot(slot) {
+    for (let i = D.DIVISIONS.length - 1; i >= 0; i--) {
+      const d = D.DIVISIONS[i];
+      if (slot >= DIV_START[d.index] && slot < DIV_START[d.index] + d.size) return d.index;
+    }
+    return 0;
+  }
+
+  /**
+   * slot から地位オブジェクトを作る。
+   * @param {number} slot
+   * @param {{Y:number,O:number}} comp 幕内の横綱・大関の人数
+   */
+  function rankFromSlot(slot, comp) {
+    const div = divOfSlot(slot);
+    const start = DIV_START[div];
+    const i = slot - start + 1;                 // 段内の 1 始まりの通し番号
+    if (div === D.MAKUUCHI) {
+      const yc = comp.Y, oc = comp.O, sc = comp.S, kc = comp.K;
+      if (i <= yc) return mk(div, "Y", i);
+      if (i <= yc + oc) return mk(div, "O", i - yc);
+      if (i <= yc + oc + sc) return mk(div, "S", i - yc - oc);
+      if (i <= yc + oc + sc + kc) return mk(div, "K", i - yc - oc - sc);
+      return mk(div, "M", i - yc - oc - sc - kc);
+    }
+    return { div, title: null, num: Math.ceil(i / 2), side: i % 2 === 1 ? "E" : "W" };
+  }
+  /** 地位ごとの通し番号 iWithin（1 始まり）から、枚数と東西を決める。 */
+  function mk(div, title, iWithin) {
+    return { div, title, num: Math.ceil(iWithin / 2), side: iWithin % 2 === 1 ? "E" : "W" };
+  }
+
+  /** 地位 → 並び順の数値（小さいほど上位）。slot が無い場面の比較用。 */
+  function rankValue(rank) {
+    if (!rank) return 9999;
+    if (rank.div === D.MAKUUCHI) {
+      const base = { Y: 0, O: 10, S: 20, K: 26, M: 32 }[rank.title || "M"];
+      return base + (rank.num - 1) * 2 + (rank.side === "W" ? 1 : 0);
+    }
+    const off = { 4: 100, 3: 200, 2: 400, 1: 600, 0: 800 }[rank.div] || 900;
+    return off + (rank.num - 1) * 2 + (rank.side === "W" ? 1 : 0);
+  }
+
+  const sideName = (s) => (s === "E" ? "東" : "西");
+
+  /** 「東 前頭 三枚目」形式のフル表記。 */
+  function label(rank) {
+    if (!rank) return "番付外";
+    const div = D.DIVISIONS[rank.div];
+    if (rank.div === D.MAKUUCHI && rank.title !== "M") {
+      const t = D.TITLES[rank.title].name;
+      const extra = rank.num > 1 ? "（" + U.kansuji(rank.num) + "枚目）" : "";
+      return sideName(rank.side) + " " + t + extra;
+    }
+    const name = rank.div === D.MAKUUCHI ? "前頭" : div.name;
+    return sideName(rank.side) + " " + name + " " + U.kansuji(rank.num) + "枚目";
+  }
+  /** 「東前3」形式の短縮表記。 */
+  function shortLabel(rank) {
+    if (!rank) return "―";
+    if (rank.div === D.MAKUUCHI && rank.title !== "M") {
+      return sideName(rank.side) + D.TITLES[rank.title].name;
+    }
+    const n = rank.div === D.MAKUUCHI ? "前" : { 4: "十", 3: "幕", 2: "三", 1: "序二", 0: "序ノ口" }[rank.div];
+    return sideName(rank.side) + n + rank.num;
+  }
+  /** 段の名前だけ（横綱・大関…／十両・幕下…）。 */
+  function divLabel(rank) {
+    if (!rank) return "―";
+    if (rank.div === D.MAKUUCHI) return D.TITLES[rank.title || "M"].name;
+    return D.DIVISIONS[rank.div].name;
+  }
+  const isSanyaku = (rank) => rank && rank.div === D.MAKUUCHI && rank.title !== "M";
+  const isSekitori = (rank) => rank && rank.div >= D.JURYO;
+  const boutsOf = (rank) => D.DIVISIONS[rank.div].bouts;
+
+  /** 二つの地位を比べて上位のほうを返す（キャリア最高位の更新用）。 */
+  function higher(a, b) {
+    if (!a) return b;
+    if (!b) return a;
+    return rankValue(a) <= rankValue(b) ? a : b;
+  }
+
+  /* ------------------------------------------------------------------
+     番付編成
+     ------------------------------------------------------------------ */
+
+  /** 大関昇進の可否。直近三場所を三役で務め、合計 33 勝が目安。 */
+  function ozekiQualified(r) {
+    const h = r.sanyakuStreak || [];
+    if (h.length < 3) return false;
+    const last3 = h.slice(-3);
+    if (!last3.every((x) => x.sanyaku)) return false;
+    const total = last3.reduce((s, x) => s + x.w, 0);
+    const cur = last3[last3.length - 1];
+    if (cur.w < 10) return false;                    // 直前場所が二桁は必須
+    return total >= 33 || (total >= 32 && cur.yusho);
+  }
+
+  /** 横綱昇進の可否。大関で二場所連続優勝、またはそれに準ずる成績。 */
+  function yokozunaQualified(r) {
+    if (!r.rank || r.rank.title !== "O") return false;
+    const h = r.sanyakuStreak || [];
+    if (h.length < 2) return false;
+    const [prev, cur] = h.slice(-2);
+    if (!cur.yusho) return false;
+    if (prev.yusho) return true;
+    return prev.w >= 13 || (prev.junYusho && prev.w >= 12);
+  }
+
+  /**
+   * 場所終了後の番付編成。世界の全力士の slot と rank を更新する。
+   * @param {object[]} active 引退していない力士の配列
+   * @returns {object} 昇進・降格の記録
+   */
+  function rebuild(active) {
+    const notes = { newOzeki: [], newYokozuna: [], demotedOzeki: [], newSekitori: [], lostSekitori: [] };
+
+    // --- 1. 横綱・大関の顔ぶれを決める（番付から自動では落ちない地位） ---
+    const yokozuna = active.filter((r) => r.rank && r.rank.title === "Y");
+    let ozeki = active.filter((r) => r.rank && r.rank.title === "O");
+
+    // 大関の陥落：角番での負け越し
+    const kept = [];
+    for (const r of ozeki) {
+      const rec = r.basho || { w: 0, l: 0, a: 0 };
+      const make = rec.w < boutsOf(r.rank) / 2;
+      if (make && r.kadoban) {
+        r.kadoban = false;
+        r._forceSekiwake = true;
+        notes.demotedOzeki.push(r);
+      } else {
+        r.kadoban = make;
+        kept.push(r);
+      }
+    }
+    ozeki = kept;
+
+    // 昇進（大関 → 横綱）
+    for (const r of ozeki.slice()) {
+      if (yokozunaQualified(r)) {
+        yokozuna.push(r);
+        ozeki = ozeki.filter((x) => x !== r);
+        r.kadoban = false;
+        notes.newYokozuna.push(r);
+      }
+    }
+    // 昇進（三役 → 大関）
+    for (const r of active) {
+      if (r.rank && (r.rank.title === "S" || r.rank.title === "K") && ozekiQualified(r) && ozeki.length < 5) {
+        ozeki.push(r);
+        notes.newOzeki.push(r);
+      }
+    }
+
+    // --- 2. 成績から新しい順位スコアを出す ---
+    const wasSekitori = new Map(active.map((r) => [r.id, isSekitori(r.rank)]));
+    for (const r of active) {
+      const rec = r.basho || { w: 0, l: 0, a: 0 };
+      const div = r.rank ? r.rank.div : 0;
+      const delta = rec.w - (rec.l + rec.a);
+      let move = U.clamp(delta * (STEP[div] || 6), -(CAP[div] || 30), CAP[div] || 30);
+      if (rec.yusho) move += div >= D.JURYO ? 6 : 10;
+      if (rec.a >= boutsOf(r.rank)) move = Math.min(move, -CAP[div] * 0.7); // 全休は大きく下げる
+      r._score = (r.slot || rankValue(r.rank)) - move + U.rnd(-0.45, 0.45);
+    }
+
+    // --- 3. 席次の割り当て ---
+    const pinned = new Set([...yokozuna, ...ozeki].map((r) => r.id));
+    const rest = active.filter((r) => !pinned.has(r.id));
+    // 陥落した大関は関脇の筆頭に置く
+    for (const r of rest) if (r._forceSekiwake) { r._score = -1e6 + rankValue(r.rank); delete r._forceSekiwake; }
+
+    const ordered = [
+      ...U.sortBy(yokozuna, (r) => r._score),
+      ...U.sortBy(ozeki, (r) => r._score),
+      ...U.sortBy(rest, (r) => r._score),
+    ];
+
+    const comp = {
+      Y: yokozuna.length,
+      O: ozeki.length,
+      S: 2,
+      K: 2,
+    };
+    // 幕内の枠に収まらない場合は三役の枠を削る（張出は作らない簡略化）
+    const sanyakuTotal = comp.Y + comp.O + comp.S + comp.K;
+    if (sanyakuTotal > MAKUUCHI_SIZE - 10) {
+      comp.K = Math.max(0, comp.K - (sanyakuTotal - (MAKUUCHI_SIZE - 10)));
+    }
+
+    ordered.forEach((r, i) => {
+      const slot = i + 1;
+      r.prevRank = r.rank;
+      r.slot = slot;
+      r.rank = rankFromSlot(slot, comp);
+      r.career.bestRank = higher(r.career.bestRank, r.rank);
+      const nowSek = isSekitori(r.rank);
+      if (nowSek && !wasSekitori.get(r.id)) notes.newSekitori.push(r);
+      if (!nowSek && wasSekitori.get(r.id)) notes.lostSekitori.push(r);
+      if (r.rank.title !== "O") r.kadoban = false;
+      delete r._score;
+    });
+
+    return notes;
+  }
+
+  SUMO.banzuke = {
+    DIV_START, TOTAL_SLOTS, MAKUUCHI_SIZE, JURYO_SIZE,
+    divOfSlot, rankFromSlot, rankValue, label, shortLabel, divLabel, sideName,
+    isSanyaku, isSekitori, boutsOf, higher, rebuild, ozekiQualified, yokozunaQualified,
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/bout.js ===== */
+/* =====================================================================
+   白星街道 / bout.js
+   ---------------------------------------------------------------------
+   取組エンジン。立合い → 攻防（最大10回の応酬）→ 決まり手 まで局面を
+   シミュレートする。UI からは start() → advance() を繰り返して進める。
+   pos は土俵上の相対位置（+1 で東の勝ち、-1 で西の勝ち）。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+  const U = SUMO.util;
+  const D = SUMO.data;
+  const R = SUMO.rikishi;
+
+  const MAX_EX = 10;
+  const DECISION_AT = 3;        // 何回目の応酬のあとに「勝負どころ」を出すか
+
+  /* ---------- 技の性質 ---------- */
+  const MOVES = {
+    push: { id: "push", aggressive: true, cost: 0.085, w: { power: 0.46, tachiai: 0.18, stamina: 0.14, legs: 0.14, mental: 0.08 } },
+    yori: { id: "yori", aggressive: true, cost: 0.075, w: { power: 0.33, tech: 0.28, legs: 0.25, stamina: 0.14 } },
+    throw: { id: "throw", aggressive: true, cost: 0.11, w: { tech: 0.52, power: 0.26, legs: 0.22 } },
+    pull: { id: "pull", aggressive: false, cost: 0.055, w: { tech: 0.48, legs: 0.28, mental: 0.24 } },
+    trip: { id: "trip", aggressive: true, cost: 0.07, w: { tech: 0.58, legs: 0.42 } },
+    hold: { id: "hold", aggressive: false, cost: 0.045, w: { legs: 0.46, stamina: 0.28, mental: 0.26 } },
+  };
+
+  /* ---------- 実況フレーズ ---------- */
+  const PHRASE = {
+    push_win: ["{a}、突き放す！", "{a}、圧力をかけて前へ！", "{a}の押しが効いている！", "{a}、一気に押し込む！"],
+    push_lose: ["{a}の押し、{b}に残された。", "{a}、押すが動かない。", "{a}の突き、空を切る。"],
+    yori_win: ["{a}、まわしを引きつけて寄る！", "{a}、腰を落として前進！", "{a}、右を差して一気に！"],
+    yori_lose: ["{a}の寄り、{b}が土俵際で堪える。", "{a}、寄るが{b}の腰が重い。"],
+    pull_fail: ["{a}、引いた……墓穴を掘ったか！", "{a}の引き技、{b}に見透かされた！"],
+    hold: ["{a}、腰を割って堪える。", "{a}、じっと我慢の体勢。", "{a}、土俵際で残す！"],
+    throw_fail: ["{a}、投げを打つが……{b}が残した！", "{a}の投げ、不発。体勢が崩れる。"],
+    trip_fail: ["{a}、足をかけにいくが掛からない。"],
+    grip: ["{a}、右上手を引いた。", "{a}、左を差して有利になった。", "{a}、両まわしを引きつけた。"],
+    edge_a: ["{b}、土俵際まで詰まった！", "残り一歩、{b}が俵に足をかける！"],
+    edge_b: ["{a}、俵に足がかかる！", "{a}、崖っぷちだ！"],
+    even: ["がっぷり四つ、動かない。", "両者、力を溜めている。", "土俵中央、にらみ合いが続く。"],
+  };
+
+  const fill = (t, a, b) => t.replace(/\{a\}/g, a).replace(/\{b\}/g, b);
+
+  /* ---------- 内側の力士状態 ---------- */
+  function makeSide(r, tachiai, plan) {
+    return {
+      r,
+      name: r.name,
+      style: D.STYLES[r.style],
+      tachiai: D.TACHIAI[tachiai] || D.TACHIAI.atari,
+      plan: D.PLANS[plan] || D.PLANS.zenshin,
+      grip: 0,           // まわしを取っている度合い 0〜1
+      uwate: false,      // 上手を取ったか（決まり手の分岐に使う）
+      stam: 1,           // 残存体力 0〜1
+      lastMove: null,
+      cond: R.condition(r),
+      aggrBonus: 1,
+      defBonus: 1,
+      // その日の出来。取組を通して一定なので、実力どおりにいかない日が生まれる
+      form: U.clamp(U.gauss(1, 0.105), 0.72, 1.3),
+    };
+  }
+
+  /** ある技を出したときの力の値。 */
+  function moveValue(s, move) {
+    const st = s.r.stats;
+    let v = 0;
+    for (const k in move.w) v += (st[k] || 0) * move.w[k];
+    v *= R.weightMod(s.r.weight) * R.ageMod(s.r.age) * s.cond;
+    v *= 0.55 + 0.45 * Math.max(0, s.stam);
+    const bias = s.style.bias;
+    if (move.id === "push") v *= bias.push * s.plan.aggr * s.aggrBonus;
+    else if (move.id === "yori") v *= bias.grip * s.plan.aggr * s.aggrBonus * (0.75 + s.grip * 0.5);
+    else if (move.id === "throw") v *= bias.throw * (0.7 + s.grip * 0.6);
+    else if (move.id === "pull") v *= bias.pull;
+    else if (move.id === "trip") v *= bias.throw * 0.9;
+    else if (move.id === "hold") v *= s.plan.defend * s.defBonus;
+    // 体重は押し合いでものを言う
+    if (move.id === "push" || move.id === "yori") v += (s.r.weight - 150) * 0.06;
+    return v * s.form * U.rnd(0.82, 1.18);
+  }
+
+  /** 局面から出す技を選ぶ（NPC・プレイヤー共通の自動選択）。 */
+  function chooseMove(s, o, pos) {
+    const st = s.r.stats;
+    const danger = pos < -0.45;         // 自分が押し込まれている
+    const chance_ = pos > 0.45;         // 自分が押している
+    const w = {
+      push: s.style.bias.push * (s.grip < 0.45 ? 1.35 : 0.6) * (danger ? 0.5 : 1) * s.plan.aggr,
+      yori: s.grip >= 0.42 ? s.style.bias.grip * 1.5 * (danger ? 0.7 : 1) * s.plan.aggr : 0.05,
+      throw: s.grip >= 0.35 ? s.style.bias.throw * (0.5 + st.tech / 160) * (danger ? 1.25 : 0.75) : 0.04,
+      pull: s.style.bias.pull * (o.lastMove && MOVES[o.lastMove].aggressive ? 1.5 : 0.5) * (chance_ ? 0.55 : 1) * 0.7,
+      trip: (st.tech / 260) * (s.grip > 0.3 ? 1.2 : 0.6),
+      hold: (danger ? 2.2 : 0.35) * s.plan.defend * (s.stam < 0.35 ? 1.6 : 1),
+    };
+    const arr = Object.keys(w).map((k) => ({ k, weight: Math.max(0.001, w[k]) }));
+    return U.weightedPick(arr).k;
+  }
+
+  /* ---------- 決まり手 ---------- */
+  function decideKimarite(kind, winner, loser, ctx) {
+    const K = D.KIMARITE;
+    switch (kind) {
+      case "push":
+        if (ctx.down) return winner.style.id === "oshi" && U.chance(0.5) ? "突き倒し" : U.pick(K.push_down);
+        return winner.style.id === "oshi" && winner.grip < 0.3 && U.chance(0.45) ? "突き出し" : U.pick(K.push_out);
+      case "yori":
+        return ctx.down ? U.pick(K.yori_down) : U.pick(K.yori_out);
+      case "throw":
+        if (U.chance(0.08)) return U.pick(K.throw_misc);
+        return winner.uwate ? U.pick(K.throw_uwate) : U.pick(K.throw_shitate);
+      case "pull": return U.pick(K.pull);
+      case "trip": return U.pick(K.trip);
+      case "counter": return U.pick(K.counter);
+      case "slip": return U.pick(K.slip);
+      default: return "寄り切り";
+    }
+  }
+
+  /* ---------- 進行 ---------- */
+
+  /**
+   * 取組を開始する。
+   * @param {object} east プレイヤー側（東）力士
+   * @param {object} west 相手（西）力士
+   * @param {object} planE {tachiai, plan}
+   * @param {object} planW {tachiai, plan}
+   */
+  function start(east, west, planE, planW, opts = {}) {
+    const b = {
+      east, west,
+      a: makeSide(east, planE.tachiai, planE.plan),
+      b: makeSide(west, planW.tachiai, planW.plan),
+      pos: 0, ex: 0,
+      log: [], frames: [],
+      done: false, winner: null, kimarite: null,
+      pending: null, interactive: !!opts.interactive,
+      torinaoshi: false, monoii: false,
+      redo: opts.redo || 0,
+    };
+    tachiai(b);
+    return b;
+  }
+
+  function tachiai(b) {
+    const A = b.a, B = b.b;
+    b.log.push({ t: "時間いっぱい――はっけよい、のこった！", cls: "call" });
+    b.frames.push({ pos: 0, kind: "tachiai" });
+
+    const henkaResolve = (S, O, isA) => {
+      const p = 0.32 + S.r.stats.mental / 500 + (O.tachiai.id === "atari" || O.tachiai.id === "kachiage" ? 0.2 : 0) - O.r.stats.tech / 700;
+      const ok = U.chance(U.clamp(p, 0.08, 0.78));
+      if (ok) {
+        b.log.push({ t: `${S.name}、立合いで鮮やかに変化！${O.name}が泳ぐ！`, cls: "hot" });
+        b.pos += isA ? 0.82 : -0.82;
+      } else {
+        b.log.push({ t: `${S.name}の変化、読まれた！体勢を崩す！`, cls: "cold" });
+        b.pos += isA ? -0.62 : 0.62;
+      }
+    };
+
+    if (A.tachiai.id === "henka") henkaResolve(A, B, true);
+    if (B.tachiai.id === "henka") henkaResolve(B, A, false);
+
+    if (A.tachiai.id !== "henka" && B.tachiai.id !== "henka") {
+      const impact = (S) =>
+        (S.r.stats.tachiai * 0.55 + S.r.stats.power * 0.3 + S.r.weight * 0.22) *
+        S.tachiai.power * S.cond * S.form * U.rnd(0.85, 1.15);
+      const ia = impact(A), ib = impact(B);
+      b.pos += U.clamp((ia - ib) / 90, -0.5, 0.5);
+      const winner = ia >= ib ? A : B;
+      const same = A.tachiai.id === B.tachiai.id;
+      b.log.push({
+        t: same
+          ? `両者ともに${A.tachiai.label}。当たりは${winner.name}が上か。`
+          : `${A.name}は${A.tachiai.label}、${B.name}は${B.tachiai.label}。当たりは${winner.name}が上か。`,
+      });
+      // かち上げは相手の体を起こすが、自分の差し手は遠のく
+      A.grip += A.tachiai.gripBias + (A.style.bias.grip - 1) * 0.25;
+      B.grip += B.tachiai.gripBias + (B.style.bias.grip - 1) * 0.25;
+      if (A.tachiai.id === "kachiage" && U.chance(0.35)) b.log.push({ t: `${A.name}のかち上げ、${B.name}の顎が上がった。`, cls: "hot" });
+    }
+    A.grip = U.clamp(A.grip, 0, 1);
+    B.grip = U.clamp(B.grip, 0, 1);
+    if (A.grip > 0.45) A.uwate = U.chance(0.5);
+    if (B.grip > 0.45) B.uwate = U.chance(0.5);
+    b.frames.push({ pos: b.pos, kind: "impact" });
+  }
+
+  /**
+   * 一手ぶん進める。
+   * @returns {"choice"|"done"|"ok"}
+   */
+  function advance(b) {
+    if (b.done) return "done";
+    if (b.pending) return "choice";
+    if (b.interactive && b.ex === DECISION_AT && !b._asked) {
+      b._asked = true;
+      b.pending = buildChoices(b);
+      return "choice";
+    }
+    exchange(b);
+    if (b.done) return "done";
+    if (b.ex >= MAX_EX) { forceFinish(b); return "done"; }
+    return "ok";
+  }
+
+  /** 勝負どころの選択肢を局面に応じて作る。 */
+  function buildChoices(b) {
+    const A = b.a;
+    if (b.pos > 0.3) {
+      return {
+        title: "攻めている。ここが勝負どころだ。",
+        options: [
+          { key: "ikki", label: "一気に出る", desc: "圧力を最大に。残されれば逆に危うい。" },
+          { key: "shinchou", label: "慎重に寄る", desc: "体勢を確かめながら前へ。" },
+          { key: "nage", label: "投げを打つ", desc: "崩れた相手に決めにいく。" },
+        ],
+      };
+    }
+    if (b.pos < -0.3) {
+      return {
+        title: "押し込まれている。どう凌ぐ。",
+        options: [
+          { key: "nokosu", label: "残す", desc: "腰を落として堪え、機を待つ。" },
+          { key: "gyakushu", label: "逆襲の投げ", desc: "捨て身の一発。決まれば大逆転。" },
+          { key: "hiku", label: "いなす", desc: "身をかわして体勢を入れ替える。" },
+        ],
+      };
+    }
+    return {
+      title: "五分の体勢。ここで型を出す。",
+      options: [
+        { key: "osu", label: "押し込む", desc: "力で圧す。" },
+        { key: "kumu", label: "組み止める", desc: "まわしを引いて自分の型に。" },
+        { key: "tsuki", label: "突き放す", desc: "距離を取り、間合いで勝負。" },
+      ],
+    };
+  }
+
+  /** 勝負どころの選択を反映する。 */
+  function choose(b, key) {
+    const A = b.a;
+    b.pending = null;
+    const say = (t, cls) => b.log.push({ t, cls: cls || "" });
+    switch (key) {
+      case "ikki": A.aggrBonus = 1.35; A.defBonus = 0.75; A._force = "push"; say(`${A.name}、腹を決めた。一気だ！`, "hot"); break;
+      case "shinchou": A.aggrBonus = 1.1; A.defBonus = 1.1; A._force = "yori"; say(`${A.name}、体勢を確かめながら寄る。`); break;
+      case "nage": A._force = "throw"; say(`${A.name}、投げにいく！`, "hot"); break;
+      case "nokosu": A.defBonus = 1.45; A._force = "hold"; say(`${A.name}、腰を割って残す！`); break;
+      case "gyakushu": A._force = "throw"; A.aggrBonus = 1.2; say(`${A.name}、捨て身の投げ！`, "hot"); break;
+      case "hiku": A._force = "pull"; say(`${A.name}、いなしにいく！`); break;
+      case "osu": A.aggrBonus = 1.2; A._force = "push"; say(`${A.name}、圧力をかける。`); break;
+      case "kumu": A.grip = U.clamp(A.grip + 0.3, 0, 1); A._force = "yori"; say(`${A.name}、まわしを引きつけた。`); break;
+      case "tsuki": A.aggrBonus = 1.15; A._force = "push"; say(`${A.name}、突き放して間合いを取る。`); break;
+    }
+    b.frames.push({ pos: b.pos, kind: "choice" });
+  }
+
+  function takeMove(s, o, pos) {
+    if (s._force) { const m = s._force; s._force = null; return m; }
+    return chooseMove(s, o, pos);
+  }
+
+  /** 一回の応酬を解決する。 */
+  function exchange(b) {
+    const A = b.a, B = b.b;
+    b.ex++;
+    const ma = takeMove(A, B, b.pos);
+    const mb = takeMove(B, A, -b.pos);
+    const va = moveValue(A, MOVES[ma]);
+    const vb = moveValue(B, MOVES[mb]);
+    A.lastMove = ma; B.lastMove = mb;
+    A.stam -= MOVES[ma].cost * (1 + Math.max(0, (A.r.weight - 165) * 0.004)) * (1.35 - A.r.stats.stamina / 300);
+    B.stam -= MOVES[mb].cost * (1 + Math.max(0, (B.r.weight - 165) * 0.004)) * (1.35 - B.r.stats.stamina / 300);
+    A.stam = Math.max(0, A.stam); B.stam = Math.max(0, B.stam);
+
+    // まわしの取り合い
+    const gripPull = (S, O, v, ov) => {
+      const d = (v - ov) / 260 + (S.style.bias.grip - 1) * 0.07;
+      S.grip = U.clamp(S.grip + d, 0, 1);
+      if (S.grip > 0.55 && !S.uwate && U.chance(0.35)) S.uwate = true;
+    };
+    gripPull(A, B, va, vb); gripPull(B, A, vb, va);
+
+    // --- 決め技の判定（投げ・引き・足技は一発で終わる） ---
+    if (tryFinisher(b, A, B, ma, va, vb, true)) return;
+    if (tryFinisher(b, B, A, mb, vb, va, false)) return;
+
+    // --- 押し合い・寄り合い ---
+    const delta = U.clamp((va - vb) / 210, -0.55, 0.55);
+    b.pos = U.clamp(b.pos + delta, -1.35, 1.35);
+
+    // 実況
+    const strong = Math.abs(delta) > 0.12;
+    let line = null;
+    if (strong) {
+      const winSide = delta > 0 ? A : B, loseSide = delta > 0 ? B : A;
+      const mv = delta > 0 ? ma : mb;
+      if (mv === "push") line = fill(U.pick(PHRASE.push_win), winSide.name, loseSide.name);
+      else if (mv === "yori") line = fill(U.pick(PHRASE.yori_win), winSide.name, loseSide.name);
+      else if (mv === "hold") line = fill(U.pick(PHRASE.hold), winSide.name, loseSide.name);
+      else line = fill(U.pick(PHRASE.push_win), winSide.name, loseSide.name);
+    } else if (b.ex % 2 === 1) {
+      line = U.pick(PHRASE.even);
+    }
+    if (line) b.log.push({ t: line });
+    if (b.pos > 0.72 && b.ex >= 2) b.log.push({ t: fill(U.pick(PHRASE.edge_a), A.name, B.name), cls: "hot" });
+    if (b.pos < -0.72 && b.ex >= 2) b.log.push({ t: fill(U.pick(PHRASE.edge_b), A.name, B.name), cls: "cold" });
+
+    b.frames.push({ pos: b.pos, kind: "ex" });
+
+    // --- 土俵を割ったか ---
+    if (b.pos >= 1) return finish(b, true, A.lastMove === "yori" || A.grip > 0.5 ? "yori" : "push", { down: U.chance(0.3) });
+    if (b.pos <= -1) return finish(b, false, B.lastMove === "yori" || B.grip > 0.5 ? "yori" : "push", { down: U.chance(0.3) });
+
+    // --- 土俵際のうっちゃり ---
+    tryCounter(b);
+  }
+
+  /** 投げ・引き・足技の成否を判定する。決まれば true。 */
+  function tryFinisher(b, S, O, move, v, ov, isA) {
+    if (move === "throw") {
+      const p = U.logistic((v - ov * 1.06) / 9) * (0.42 + S.grip * 0.4);
+      if (U.chance(p)) { finish(b, isA, "throw", { winner: S }); return true; }
+      b.pos += (isA ? -1 : 1) * 0.3;
+      b.log.push({ t: fill(U.pick(PHRASE.throw_fail), S.name, O.name), cls: "cold" });
+      b.frames.push({ pos: b.pos, kind: "ex" });
+      return false;
+    }
+    if (move === "pull") {
+      const oAggr = O.lastMove && MOVES[O.lastMove].aggressive;
+      const base = oAggr ? 0.42 : 0.1;
+      const p = base * U.logistic((v - ov * 0.9) / 12) * 2;
+      if (U.chance(U.clamp(p, 0.02, 0.62))) { finish(b, isA, "pull", { winner: S }); return true; }
+      b.pos += (isA ? -1 : 1) * 0.38;
+      b.log.push({ t: fill(U.pick(PHRASE.pull_fail), S.name, O.name), cls: "cold" });
+      b.frames.push({ pos: b.pos, kind: "ex" });
+      return false;
+    }
+    if (move === "trip") {
+      const p = U.logistic((v - ov * 1.12) / 10) * 0.3;
+      if (U.chance(p)) { finish(b, isA, "trip", { winner: S }); return true; }
+      b.pos += (isA ? -1 : 1) * 0.12;
+      if (U.chance(0.5)) b.log.push({ t: fill(U.pick(PHRASE.trip_fail), S.name, O.name) });
+      return false;
+    }
+    return false;
+  }
+
+  /** 土俵際の逆転（うっちゃり・突き落とし）。 */
+  function tryCounter(b) {
+    const edge = 0.82;
+    const trial = (S, O, isA, pos) => {
+      if (pos > -edge) return false;
+      const p = U.logistic((S.r.stats.legs + S.r.stats.tech * 0.5 - O.r.stats.power) / 26) * 0.22 * S.cond;
+      if (U.chance(p)) {
+        b.log.push({ t: `${S.name}、土俵際で残した――そして、うっちゃった！`, cls: "hot" });
+        finish(b, isA, "counter", { winner: S });
+        return true;
+      }
+      return false;
+    };
+    if (trial(b.a, b.b, true, b.pos)) return;
+    trial(b.b, b.a, false, -b.pos);
+  }
+
+  /** 決着処理。 */
+  function finish(b, eastWins, kind, ctx = {}) {
+    const winner = eastWins ? b.a : b.b;
+    const loser = eastWins ? b.b : b.a;
+    let kimarite = decideKimarite(kind, winner, loser, ctx);
+
+    // ごく稀に勝った側が先に土俵を割る（勇み足・腰砕け）
+    if (kind === "push" && Math.abs(b.pos) > 1.2 && U.chance(0.022)) {
+      kimarite = U.pick(D.KIMARITE.slip);
+      eastWins = !eastWins;
+      b.log.push({ t: `――${winner.name}、勢い余って足が出た！`, cls: "cold" });
+    }
+
+    b.pos = eastWins ? 1.25 : -1.25;
+    b.frames.push({ pos: b.pos, kind: kind === "throw" || kind === "counter" || ctx.down ? "throwdown" : "out", win: eastWins });
+    b.done = true;
+    b.winner = eastWins ? "east" : "west";
+    b.kimarite = kimarite;
+    b.kind = kind;
+
+    // 物言い：際どい一番はまれに取り直しとなる
+    if (!b.redo && U.chance(0.028)) {
+      b.monoii = true;
+      b.torinaoshi = true;
+    }
+    b.log.push({ t: `決まり手は「${kimarite}」。`, cls: "kimarite" });
+    b.log.push({ t: `${(eastWins ? b.a : b.b).name}の勝ち！`, cls: "win" });
+    return true;
+  }
+
+  /** 応酬が尽きた場合の決着（水入りは扱わず、優勢な側の勝ちとする）。 */
+  function forceFinish(b) {
+    const A = b.a, B = b.b;
+    b.log.push({ t: "長い相撲になった――双方、息が上がっている。", cls: "call" });
+    const scoreA = b.pos * 100 + A.stam * 40 + A.r.stats.stamina * 0.3;
+    const scoreB = -b.pos * 100 + B.stam * 40 + B.r.stats.stamina * 0.3;
+    const eastWins = scoreA >= scoreB;
+    finish(b, eastWins, eastWins ? (A.grip > 0.5 ? "yori" : "push") : (B.grip > 0.5 ? "yori" : "push"), { down: false });
+  }
+
+  /** 決着まで一気に進める（観戦・自動処理用）。 */
+  function runToEnd(b) {
+    let guard = 0;
+    while (!b.done && guard++ < 40) {
+      const st = advance(b);
+      if (st === "choice") {
+        // 自動進行時は最も自然な選択を採る
+        const opt = b.pending.options[0];
+        choose(b, opt.key);
+      }
+    }
+    return b;
+  }
+
+  SUMO.bout = { start, advance, choose, runToEnd, MOVES, DECISION_AT, decideKimarite };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/league.js ===== */
+/* =====================================================================
+   白星街道 / league.js
+   ---------------------------------------------------------------------
+   角界そのもののシミュレーション。約270人の力士が番付を持ち、
+   毎場所それぞれの取組を戦い、昇進・降格・引退・入門を繰り返す。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+  const U = SUMO.util;
+  const D = SUMO.data;
+  const R = SUMO.rikishi;
+  const B = SUMO.banzuke;
+
+  /* ---------- 世界の生成 ---------- */
+
+  function createWorld() {
+    R.resetNames();
+    const world = { byId: {}, ids: [] };
+    const comp = { Y: 2, O: 3, S: 2, K: 2 };
+    for (let slot = 1; slot <= B.TOTAL_SLOTS; slot++) {
+      const rank = B.rankFromSlot(slot, comp);
+      const r = R.create({ rank, spread: U.rnd(0.93, 1.07) });
+      r.slot = slot;
+      r.career.basho = ageBasedBasho(r);
+      world.byId[r.id] = r;
+      world.ids.push(r.id);
+    }
+    // 上位陣に相応の実績を持たせておく（世界に歴史があるように見せる）
+    for (const r of list(world)) {
+      if (r.rank.div === D.MAKUUCHI) {
+        const t = r.rank.title;
+        if (t === "Y") { r.career.yusho = Array.from({ length: U.randInt(3, 11) }, () => ({})); r.career.makuuchiBasho = U.randInt(30, 60); }
+        else if (t === "O") { r.career.yusho = Array.from({ length: U.randInt(0, 3) }, () => ({})); r.career.makuuchiBasho = U.randInt(20, 45); }
+        else r.career.makuuchiBasho = U.randInt(1, 28);
+      }
+    }
+    return world;
+  }
+  function ageBasedBasho(r) {
+    return U.clamp((r.age - 16) * 6 + U.randInt(-3, 3), 1, 120);
+  }
+
+  const list = (w) => w.ids.map((id) => w.byId[id]).filter(Boolean);
+  const active = (w) => list(w).filter((r) => !r.retired);
+  function add(w, r) { w.byId[r.id] = r; if (!w.ids.includes(r.id)) w.ids.push(r.id); return r; }
+  function remove(w, id) { delete w.byId[id]; w.ids = w.ids.filter((x) => x !== id); }
+  const byDivision = (w, div) => U.sortBy(active(w).filter((r) => r.rank.div === div), (r) => r.slot);
+
+  /**
+   * プレイヤーを世界に組み込む。序ノ口の末尾に置き、押し出された1名を引退させる。
+   */
+  function insertPlayer(world, player) {
+    const jonokuchi = byDivision(world, 0);
+    const victim = jonokuchi[jonokuchi.length - 1];
+    if (victim) { victim.retired = true; remove(world, victim.id); }
+    player.slot = B.TOTAL_SLOTS;
+    player.rank = B.rankFromSlot(player.slot, currentComp(world));
+    add(world, player);
+    resort(world);
+    return player;
+  }
+
+  /** 現在の幕内構成（横綱・大関の人数）。 */
+  function currentComp(world) {
+    const mk = active(world).filter((r) => r.rank.div === D.MAKUUCHI);
+    return {
+      Y: mk.filter((r) => r.rank.title === "Y").length,
+      O: mk.filter((r) => r.rank.title === "O").length,
+      S: 2, K: 2,
+    };
+  }
+  /** slot 順に ids を並べ直す。 */
+  function resort(world) {
+    world.ids = U.sortBy(active(world), (r) => r.slot).map((r) => r.id);
+  }
+
+  /* ---------- 場所の進行 ---------- */
+
+  /** 各段の取組日（15日間のうち何日目に取るか）。 */
+  function boutDays(div) {
+    return D.DIVISIONS[div].bouts === 15
+      ? Array.from({ length: 15 }, (_, i) => i + 1)
+      : [1, 3, 5, 7, 9, 11, 13, 15].slice(0, D.DIVISIONS[div].bouts);
+  }
+
+  /** 場所前の初期化。 */
+  function openBasho(world) {
+    world._met = new Set();
+    for (const r of active(world)) {
+      r.basho = { w: 0, l: 0, a: 0, results: [], kyujo: false, kinboshi: 0 };
+      r.fatigue = U.clamp(r.fatigue - 12, 0, 100);
+    }
+  }
+
+  const pairKey = (a, b) => (a.id < b.id ? a.id + "|" + b.id : b.id + "|" + a.id);
+
+  /** 組んでよい相手か（同部屋でなく、今場所まだ当たっていない）。 */
+  function canPair(a, b, metSet) {
+    return a !== b && a.heya !== b.heya && !metSet.has(pairKey(a, b));
+  }
+
+  /**
+   * ある段の、ある日の取組を編成する。
+   * 同部屋対戦と再戦を避け、後半ほど星の近い者どうしを当てる。
+   * 貪欲法で組んだあと、余った力士を既存の組との入れ替えで解消する。
+   */
+  function buildTorikumi(members, day, totalDays, metSet) {
+    if (members.length < 2) return [];
+    const lateW = (day / totalDays) * 5.5;
+    const sorted = U.sortBy(members, (r) => r.slot - (r.basho.w - r.basho.l) * lateW);
+    const used = new Set();
+    const pairs = [];
+    const gap = day <= 3 ? U.clamp(Math.floor(sorted.length * 0.12), 1, 6) : 1;
+
+    // --- 貪欲に、番付の近い者どうしを組む ---
+    for (let i = 0; i < sorted.length; i++) {
+      const a = sorted[i];
+      if (used.has(a.id)) continue;
+      let partner = null;
+      const order = [];
+      for (let d = 0; d < sorted.length; d++) { order.push(i + gap + d); if (d > 0) order.push(i + gap - d); }
+      for (const j of order) {
+        if (j <= i || j >= sorted.length) continue;
+        const c = sorted[j];
+        if (used.has(c.id) || !canPair(a, c, metSet)) continue;
+        partner = c; break;
+      }
+      if (!partner) continue;
+      used.add(a.id); used.add(partner.id);
+      pairs.push([a, partner]);
+    }
+
+    // --- 余った力士を、既存の組との二者交換で救済する ---
+    let leftover = sorted.filter((r) => !used.has(r.id));
+    for (let i = 0; i < leftover.length; i++) {
+      const u = leftover[i];
+      if (used.has(u.id)) continue;
+      let fixed = false;
+      // まず、余った者どうしで組めるなら、それが最善
+      for (let j = i + 1; j < leftover.length && !fixed; j++) {
+        const v = leftover[j];
+        if (used.has(v.id) || !canPair(u, v, metSet)) continue;
+        pairs.push([u, v]); used.add(u.id); used.add(v.id); fixed = true;
+      }
+      for (let k = 0; k < pairs.length && !fixed; k++) {
+        const [x, y] = pairs[k];
+        for (let j = i + 1; j < leftover.length && !fixed; j++) {
+          const v = leftover[j];
+          if (used.has(v.id)) continue;
+          if (canPair(u, x, metSet) && canPair(v, y, metSet)) {
+            pairs[k] = [u, x]; pairs.push([v, y]); fixed = true;
+          } else if (canPair(u, y, metSet) && canPair(v, x, metSet)) {
+            pairs[k] = [u, y]; pairs.push([v, x]); fixed = true;
+          }
+          if (fixed) { used.add(u.id); used.add(v.id); }
+        }
+      }
+    }
+    // --- どうしても組めない者は、制約を緩めて当てる（極めて稀） ---
+    leftover = sorted.filter((r) => !used.has(r.id));
+    for (let i = 0; i + 1 < leftover.length; i += 2) {
+      pairs.push([leftover[i], leftover[i + 1]]);
+      used.add(leftover[i].id); used.add(leftover[i + 1].id);
+    }
+
+    for (const p of pairs) metSet.add(pairKey(p[0], p[1]));
+    // 番付が上の側を東に置く
+    return pairs.map(([a, b]) => (a.slot <= b.slot ? [a, b] : [b, a]));
+  }
+
+  /* ---------- 簡易取組（NPC同士） ---------- */
+
+  const KIMARITE_FLAT = Object.values(D.KIMARITE).flat();
+
+  /**
+   * 二人の力士から勝敗と決まり手を素早く決める（NPC同士の取組用）。
+   * 実力の「比」で判定する。差ではなく比で見ることで、上位陣の中では
+   * 拮抗し、段が離れれば歴然とする、という現実の勾配に近づく。
+   */
+  function quickBout(a, b) {
+    const sa = Math.max(1, R.strength(a)), sb = Math.max(1, R.strength(b));
+    const p = U.logistic(Math.log(sa / sb) * 4.6);
+    const aWins = U.chance(p);
+    const w = aWins ? a : b;
+    const st = D.STYLES[w.style];
+    let kim;
+    const roll = U.random();
+    if (st.id === "oshi") kim = roll < 0.62 ? U.pick(D.KIMARITE.push_out) : roll < 0.8 ? U.pick(D.KIMARITE.pull) : U.pick(D.KIMARITE.push_down);
+    else if (st.id === "waza") kim = roll < 0.4 ? U.pick(D.KIMARITE.pull) : roll < 0.72 ? U.pick(D.KIMARITE.throw_shitate) : U.pick(KIMARITE_FLAT);
+    else kim = roll < 0.55 ? U.pick(D.KIMARITE.yori_out) : roll < 0.78 ? U.pick(D.KIMARITE.throw_uwate) : U.pick(D.KIMARITE.throw_shitate);
+    return { winner: aWins ? a : b, loser: aWins ? b : a, kimarite: kim };
+  }
+
+  /** 取組結果を両者の成績に記録する。 */
+  function record(day, winner, loser, kimarite, opts = {}) {
+    winner.basho.w++;
+    winner.basho.results.push({ day, opp: loser.id, oppName: loser.name, win: true, kimarite, fusen: !!opts.fusen });
+    if (opts.fusen) {
+      loser.basho.a++;
+      loser.basho.results.push({ day, opp: winner.id, oppName: winner.name, win: false, kimarite: "不戦敗", fusen: true });
+    } else {
+      loser.basho.l++;
+      loser.basho.results.push({ day, opp: winner.id, oppName: winner.name, win: false, kimarite, fusen: false });
+      loser.fatigue = U.clamp(loser.fatigue + 3, 0, 100);
+      winner.fatigue = U.clamp(winner.fatigue + 2.4, 0, 100);
+    }
+    // 金星：平幕が横綱を倒す
+    if (!opts.fusen && winner.rank.div === D.MAKUUCHI && winner.rank.title === "M" && loser.rank.title === "Y") {
+      winner.basho.kinboshi++;
+      winner.career.kinboshi++;
+      return { kinboshi: true };
+    }
+    return {};
+  }
+
+  /**
+   * 一日ぶんの取組を消化する。
+   * @param {object} world
+   * @param {number} day 1〜15
+   * @param {string|null} skipId この力士の取組は外部（プレイヤー）が処理する
+   * @returns {object} {results:[], playerBout:{east,west}|null}
+   */
+  function simulateDay(world, day, skipId) {
+    const out = { results: [], playerBout: null };
+    for (let div = D.DIVISIONS.length - 1; div >= 0; div--) {
+      if (!boutDays(div).includes(day)) continue;
+      const pool = byDivision(world, div);
+      if (!world._met) world._met = new Set();
+      const pairs = buildTorikumi(pool, day, D.DIVISIONS[div].bouts, world._met);
+      for (const [e, w] of pairs) {
+        if (skipId && (e.id === skipId || w.id === skipId)) { out.playerBout = { east: e, west: w, div }; continue; }
+        if (e.basho.kyujo && w.basho.kyujo) continue;
+        if (e.basho.kyujo) { record(day, w, e, "不戦勝", { fusen: true }); out.results.push({ div, day, winner: w, loser: e, kimarite: "不戦勝" }); continue; }
+        if (w.basho.kyujo) { record(day, e, w, "不戦勝", { fusen: true }); out.results.push({ div, day, winner: e, loser: w, kimarite: "不戦勝" }); continue; }
+        const res = quickBout(e, w);
+        const meta = record(day, res.winner, res.loser, res.kimarite);
+        out.results.push({ div, day, winner: res.winner, loser: res.loser, kimarite: res.kimarite, kinboshi: !!meta.kinboshi });
+      }
+      // 場所中の休場判定（故障の悪化）
+      for (const r of pool) {
+        if (r.isPlayer || r.basho.kyujo) continue;
+        if (r.injury && r.injury.severity >= 2.6 && U.chance(0.12)) r.basho.kyujo = true;
+        else if (U.chance(0.0035)) { R.injure(r, U.pick(["右膝", "左膝", "腰", "足首", "肩"]), 2); r.basho.kyujo = U.chance(0.4); }
+      }
+    }
+    return out;
+  }
+
+  /** その段の優勝争い（上位）。 */
+  function leaderboard(world, div, limit = 6) {
+    const members = byDivision(world, div);
+    return U.sortByDesc(members, (r) => r.basho.w * 100 - r.basho.l).slice(0, limit);
+  }
+
+  /** 優勝者を決める。同点なら決定戦（プレイヤーが絡む場合は呼び出し側で処理）。 */
+  function decideYusho(world, div) {
+    const members = byDivision(world, div);
+    const max = Math.max(...members.map((r) => r.basho.w));
+    const tied = members.filter((r) => r.basho.w === max);
+    return { max, tied };
+  }
+
+  /** 決定戦をトーナメント形式で消化する（NPC のみ）。 */
+  function resolvePlayoff(tied) {
+    let pool = U.shuffle(tied);
+    while (pool.length > 1) {
+      const next = [];
+      for (let i = 0; i < pool.length; i += 2) {
+        if (i + 1 >= pool.length) { next.push(pool[i]); continue; }
+        next.push(quickBout(pool[i], pool[i + 1]).winner);
+      }
+      pool = next;
+    }
+    return pool[0];
+  }
+
+  /* ---------- 場所後の処理 ---------- */
+
+  /** 成績をキャリアに積み上げる。 */
+  function closeBasho(world, bashoLabel) {
+    for (const r of active(world)) {
+      const b = r.basho;
+      if (!b) continue;
+      const c = r.career;
+      const bouts = B.boutsOf(r.rank);
+      c.basho++;
+      c.wins += b.w; c.losses += b.l; c.absences += b.a;
+      if (r.rank.div === D.MAKUUCHI) { c.makuuchiWins += b.w; c.makuuchiLosses += b.l; c.makuuchiBasho++; }
+      if (B.isSekitori(r.rank)) c.sekitoriBasho++;
+      if (B.isSanyaku(r.rank)) c.sanyakuBasho++;
+      if (b.w > bouts / 2) c.kachikoshi++; else if (b.l + b.a > bouts / 2) c.makekoshi++;
+      if (b.yusho) c.yusho.push({ label: bashoLabel, div: r.rank.div, record: `${b.w}勝${b.l}敗` });
+      // 三役成績の履歴（大関・横綱昇進の判断に使う）
+      r.sanyakuStreak = (r.sanyakuStreak || []).concat([{
+        sanyaku: B.isSanyaku(r.rank), w: b.w, l: b.l, yusho: !!b.yusho, junYusho: !!b.junYusho,
+      }]).slice(-4);
+    }
+  }
+
+  /**
+   * 年齢による能力の変化。素質（potential）に向かって伸び、
+   * 全盛を過ぎれば衰える。伸びしろが尽きた者はそこで頭打ちになる。
+   */
+  function ageProgress(r) {
+    const cur = R.rawStrength(r);
+    const pot = r.potential || cur;
+    let rate;
+    if (r.age <= 30) {
+      const room = (pot - cur) / Math.max(20, pot);      // 残された伸びしろ
+      const speed = r.age <= 21 ? 0.30 : r.age <= 24 ? 0.22 : r.age <= 27 ? 0.12 : 0.05;
+      rate = room * speed + U.rnd(-0.012, 0.012);
+    } else {
+      rate = -(r.age - 30) * 0.013 + U.rnd(-0.012, 0.012);
+    }
+    rate = U.clamp(rate, -0.12, 0.09);
+    for (const k of D.STAT_KEYS) {
+      r.stats[k] = U.clamp(r.stats[k] * (1 + rate), 3, D.STAT_CAP);
+    }
+    r.weight = U.clamp(U.fmt1(r.weight + U.rnd(-1.5, 2.2)), 90, 220);
+    if (r.injury) R.heal(r, U.randInt(15, 45));
+  }
+
+  /** 引退の判定（NPC）。 */
+  function shouldRetire(r) {
+    if (r.isPlayer) return false;
+    const div = r.rank.div;
+    const sanyaku = B.isSanyaku(r.rank);
+    if (r.age >= 38) return true;
+    if (r.age >= 34 && div < D.JURYO) return U.chance(0.6);
+    if (r.age >= 32 && div < D.MAKUSHITA) return U.chance(0.4);
+    if (r.age >= 35) return U.chance(0.45);
+    if (r.rank.title === "Y") {
+      const h = (r.sanyakuStreak || []).slice(-2);
+      const bad = h.length === 2 && h.every((x) => x.w < 8);
+      if (bad) return true;
+      if (r.age >= 33 && U.chance(0.3)) return true;
+    }
+    if (r.injury && r.injury.severity >= 2.8 && r.age >= 30) return U.chance(0.5);
+    if (r.age >= 28 && div === 0) return U.chance(0.35);
+    return false;
+  }
+
+  /** 引退者を処理し、同数の新弟子を入門させる。 */
+  function turnover(world) {
+    const out = { retired: [], debut: [] };
+    for (const r of active(world)) {
+      if (shouldRetire(r)) { r.retired = true; out.retired.push(r); }
+    }
+    for (const r of out.retired) remove(world, r.id);
+    const need = B.TOTAL_SLOTS - active(world).length;
+    for (let i = 0; i < need; i++) {
+      // 新弟子の素質は誰にも分からない。ごく稀に、化ける者がいる。
+      const rookie = R.create({
+        rank: { div: 0, title: null, num: 12, side: "E" },
+        age: U.randInt(15, 20),
+        spread: U.rnd(0.75, 1.15),
+        potential: U.chance(0.055)
+          ? 120 + Math.pow(U.random(), 1.9) * 45          // 稀に現れる大器
+          : U.clamp(U.gauss(52, 26), 16, 122),
+      });
+      rookie.slot = B.TOTAL_SLOTS;
+      add(world, rookie);
+      out.debut.push(rookie);
+    }
+    return out;
+  }
+
+  /** 場所と場所のあいだ。加齢・成長・引退・新弟子・番付編成。 */
+  function interBasho(world, bashoIdx) {
+    for (const r of active(world)) {
+      if (!r.isPlayer) ageProgress(r);
+      if (bashoIdx === 0) r.age += 1;
+      r.fatigue = U.clamp(r.fatigue - 25, 0, 100);
+    }
+    const to = turnover(world);
+    const notes = B.rebuild(active(world));
+    resort(world);
+    return { ...notes, ...to };
+  }
+
+  SUMO.league = {
+    createWorld, list, active, add, remove, byDivision, insertPlayer, currentComp, resort,
+    openBasho, buildTorikumi, quickBout, record, simulateDay, boutDays,
+    leaderboard, decideYusho, resolvePlayoff, closeBasho, interBasho, turnover, ageProgress,
+    pairKey,
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/game.js ===== */
+/* =====================================================================
+   白星街道 / game.js
+   ---------------------------------------------------------------------
+   ゲーム進行の中枢。稽古 → 本場所 → 番付編成 → 引退 までの状態遷移と
+   セーブ／ロードを受け持つ。描画は ui.js に委ねる。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+  const U = SUMO.util;
+  const D = SUMO.data;
+  const R = SUMO.rikishi;
+  const B = SUMO.banzuke;
+  const L = SUMO.league;
+
+  const SAVE_KEY = "hoshitori.save.v2";
+  const HOF_KEY = "hoshitori.hof.v2";
+  const SAFE_SCREENS = new Set(["keiko", "torikumi", "bashoResult", "banzukeUpdate", "bashoIntro", "restDigest"]);
+
+  /** 現在のゲーム。ui.js からも参照される。 */
+  let G = null;
+  const get = () => G;
+
+  /* ==================================================================
+     生成
+     ================================================================== */
+
+  /**
+   * 新しいキャリアを始める。
+   * @param {object} o {name, region, heya, style, build}
+   */
+  function newGame(o) {
+    R.resetNames();
+    const world = L.createWorld();
+    const region = D.REGIONS.find((x) => x.name === o.region) || D.REGIONS[0];
+    const build = BUILDS[o.build] || BUILDS.standard;
+
+    R.reserveName(o.name);
+    const player = R.create({
+      name: o.name,
+      isPlayer: true,
+      heya: o.heya,
+      region: region.name,
+      style: o.style,
+      age: 18,
+      rank: { div: 0, title: null, num: 12, side: "E" },
+      weight: build.weight,
+      height: build.height,
+      strength: 22,
+      // 素質は入門時に決まっている。本人にも、まだ分からない。
+      potential: U.clamp(U.gauss(138, 13), 106, 165),
+    });
+    // 体型と出身地の個性を反映する
+    for (const k of D.STAT_KEYS) {
+      player.stats[k] = U.clamp(Math.round(player.stats[k] * (build.stats[k] || 1) + (region.bonus[k] || 0)), 5, D.STAT_CAP);
+    }
+    player.career.basho = 0;
+    player.career.bestRank = null;
+
+    G = {
+      version: 2,
+      screen: "keiko",
+      year: 2026,
+      bashoIdx: 0,
+      bashoCount: 1,
+      day: 1,
+      bashoDay: 0,
+      playerId: player.id,
+      heyaId: o.heya,
+      world,
+      sel: { train: null, chanko: null, amount: "normal", tachiai: null, plan: null },
+      pendingDay: null,
+      bout: null,
+      todayBout: null,
+      digest: [],
+      lastKeiko: null,
+      curEvent: null,
+      eventGain: null,
+      flags: { fired: {}, married: false, metWife: false, eventThisBasho: false, retired: false },
+      history: [],
+      notes: null,
+      result: null,
+      rivalId: null,
+      scouting: 0,
+      overlay: null,
+      log: [],
+    };
+    L.insertPlayer(world, player);
+    bindHelpers(G);
+    pickRival(G);
+    // 入門時のイベント
+    const ev = D.EVENTS.find((e) => e.id === "shindeshi");
+    if (ev) triggerEvent(ev);
+    return G;
+  }
+
+  /** 体型プリセット。 */
+  const BUILDS = {
+    heavy: { label: "アンコ型", desc: "重い身体。当たりは強いが動きは鈍い。", weight: 148, height: 180, stats: { power: 1.15, stamina: 0.92, tech: 0.94, legs: 1.05, tachiai: 1.05, mental: 1 } },
+    standard: { label: "普通", desc: "平均的な体格。どの型にも進める。", weight: 128, height: 183, stats: {} },
+    lean: { label: "ソップ型", desc: "痩せ型。技と速さで補う必要がある。", weight: 112, height: 187, stats: { power: 0.9, tech: 1.15, stamina: 1.08, legs: 1.05, tachiai: 1.02, mental: 1 } },
+  };
+
+  /** イベント定義から参照されるヘルパーを生やす。 */
+  function bindHelpers(g) {
+    Object.defineProperty(g, "player", { get: () => g.world.byId[g.playerId], configurable: true });
+    Object.defineProperty(g, "heya", { get: () => D.HEYA.find((h) => h.id === g.heyaId) || D.HEYA[0], configurable: true });
+    Object.defineProperty(g, "rivalName", { get: () => (g.rivalId && g.world.byId[g.rivalId] ? g.world.byId[g.rivalId].name : null), configurable: true });
+    g.injure = (part, sev) => R.injure(g.player, part, sev);
+  }
+
+  /** 同年代のライバルを選ぶ。 */
+  function pickRival(g) {
+    const cands = L.active(g.world).filter((r) => !r.isPlayer && Math.abs(r.age - g.player.age) <= 2 && r.rank.div <= 2);
+    if (cands.length) {
+      const rival = U.sortBy(cands, (r) => r.slot)[Math.floor(cands.length * 0.15)] || cands[0];
+      g.rivalId = rival.id;
+    }
+  }
+
+  /* ==================================================================
+     稽古
+     ================================================================== */
+
+  /** 稽古メニューが選べるか。 */
+  function trainingAvailable(t) {
+    if (t.req != null && G.player.rank.div < t.req) return false;
+    if (t.id === "chiryo" && !G.player.injury) return false;
+    return true;
+  }
+
+  /** 一日ぶんの稽古と食事を確定する（アニメの起点）。 */
+  function commitDay() {
+    const s = G.sel;
+    if (!s.train || !s.chanko) return false;
+    G.pendingDay = { train: s.train, chanko: s.chanko, amount: s.amount };
+    G.screen = "keikoAnim";
+    return true;
+  }
+
+  /** 稽古の効果を適用する。 */
+  function applyDay() {
+    const p = G.pendingDay;
+    if (!p) return;
+    const r = G.player, heya = G.heya;
+    const tr = D.TRAININGS[p.train];
+    const notes = [];
+
+    const tired = r.fatigue >= 70;
+    const heyaMul = (heya.train && heya.train[tr.id]) || 1;
+    const gained = R.applyGain(r, tr.gain, (tired ? 0.55 : 1) * heyaMul, heya.growth);
+    r.fatigue = U.clamp(r.fatigue + tr.fatigue * (tr.fatigue > 0 ? (heya.fatigue || 1) : 1), 0, 100);
+    if (tr.burn) r.weight = U.fmt1(U.clamp(r.weight - tr.burn, 80, 230));
+    if (tr.heal) R.heal(r, tr.heal);
+    if (tr.scouting) G.scouting = U.clamp(G.scouting + 1, 0, 3);
+
+    // 故障の危険
+    const riskBase = tr.risk * (tired ? 0.055 : 0.014) * (1 + Math.max(0, (r.weight - 175) * 0.006));
+    if (tr.risk && U.chance(riskBase)) {
+      const part = U.pick(["右膝", "左膝", "腰", "右肩", "足首", "首"]);
+      R.injure(r, part, U.chance(0.25) ? 2 : 1);
+      notes.push(`稽古中に${part}を痛めた。`);
+    }
+
+    const ch = D.CHANKO[p.chanko], am = D.AMOUNTS[p.amount];
+    R.applyGain(r, ch.gain, am.gMul, heya.growth);
+    r.weight = U.fmt1(U.clamp(r.weight + ch.weight * am.wMul, 80, 230));
+    r.fatigue = U.clamp(r.fatigue + (ch.fatigue || 0) + (am.fatigue || 0), 0, 100);
+    if (G.flags.married) r.fatigue = U.clamp(r.fatigue - 3, 0, 100);
+
+    G.lastKeiko = { train: tr, chanko: ch, amount: am, gained, notes };
+    G.sel.train = null; G.sel.chanko = null;
+    G.pendingDay = null;
+    G.day++;
+
+    // 人生イベント（1場所につき1回まで）
+    if (!G.flags.eventThisBasho && U.chance(0.3)) {
+      const ev = rollEvent();
+      if (ev) { G.flags.eventThisBasho = true; triggerEvent(ev); return; }
+    }
+    if (G.day > D.KEIKO_DAYS) enterBasho();
+    else G.screen = "keiko";
+    save();
+  }
+
+  function rollEvent() {
+    const pool = D.EVENTS.filter((e) => {
+      if (e.id === "shindeshi") return false;
+      if (e.once && G.flags.fired[e.id]) return false;
+      try { return e.cond(G); } catch (err) { return false; }
+    });
+    if (!pool.length) return null;
+    return U.weightedPick(pool);
+  }
+
+  function triggerEvent(ev) {
+    G.flags.fired[ev.id] = true;
+    let gain = "";
+    try { gain = ev.effect(G) || ""; } catch (err) { gain = ""; }
+    for (const k of D.STAT_KEYS) G.player.stats[k] = U.clamp(G.player.stats[k], 1, D.STAT_CAP);
+    G.player.fatigue = U.clamp(G.player.fatigue, 0, 100);
+    G.player.weight = U.fmt1(U.clamp(G.player.weight, 80, 230));
+    G.curEvent = ev;
+    G.eventGain = gain;
+    G.screen = "event";
+  }
+
+  function closeEvent() {
+    G.curEvent = null; G.eventGain = null;
+    if (G.day > D.KEIKO_DAYS) enterBasho();
+    else G.screen = "keiko";
+    save();
+  }
+
+  /* ==================================================================
+     本場所
+     ================================================================== */
+
+  const bashoInfo = () => D.BASHO[G.bashoIdx];
+  const bashoLabel = () => `${G.year}年 ${bashoInfo().name}`;
+
+  function enterBasho() {
+    L.openBasho(G.world);
+    G.bashoDay = 0;
+    G.digest = [];
+    G.result = null;
+    G.screen = "bashoIntro";
+    save();
+  }
+
+  /**
+   * 次の取組日まで日を進める。プレイヤーの取組がある日で止まる。
+   */
+  function advanceDay() {
+    const player = G.player;
+    G.digest = [];
+    while (G.bashoDay < 15) {
+      G.bashoDay++;
+      const res = L.simulateDay(G.world, G.bashoDay, G.playerId);
+      G.digest.push({ day: G.bashoDay, results: res.results });
+      if (res.playerBout) {
+        G.todayBout = {
+          east: res.playerBout.east.id,
+          west: res.playerBout.west.id,
+          playerIsEast: res.playerBout.east.id === G.playerId,
+        };
+        G.sel.tachiai = null; G.sel.plan = null;
+        G.screen = "torikumi";
+        save();
+        return;
+      }
+    }
+    finishBasho();
+  }
+
+  /** プレイヤーの対戦相手。 */
+  function opponent() {
+    if (!G.todayBout) return null;
+    const id = G.todayBout.playerIsEast ? G.todayBout.west : G.todayBout.east;
+    return G.world.byId[id];
+  }
+
+  /** 取組を開始する。 */
+  function beginBout() {
+    const p = G.player, o = opponent();
+    if (!o || !G.sel.tachiai || !G.sel.plan) return false;
+    const oppPlan = npcPlan(o, p);
+    G.bout = SUMO.bout.start(p, o, { tachiai: G.sel.tachiai, plan: G.sel.plan }, oppPlan, { interactive: true });
+    G.bout._eastIsPlayer = true;
+    G.screen = "boutAnim";
+    return true;
+  }
+
+  /** 相手の立合いと作戦を決める。 */
+  function npcPlan(o, p) {
+    const st = D.STYLES[o.style];
+    const tachiai = U.weightedPick([
+      { k: "atari", weight: 3 + (o.stats.tachiai > o.stats.tech ? 2 : 0) },
+      { k: "kachiage", weight: o.stats.power > o.stats.tech ? 2 : 0.6 },
+      { k: "sashi", weight: st.bias.grip * 2.2 },
+      { k: "uke", weight: 1 },
+      { k: "henka", weight: o.stats.tech > o.stats.power ? 0.5 : 0.22 },
+    ]).k;
+    const plan = U.weightedPick([
+      { k: "zenshin", weight: st.bias.push * 2 },
+      { k: "kumi", weight: st.bias.grip * 2 },
+      { k: "keisei", weight: 1 },
+    ]).k;
+    return { tachiai, plan };
+  }
+
+  /** 取組の決着を成績に反映する。 */
+  function resolveBout() {
+    const b = G.bout;
+    if (!b) return;
+    if (b.torinaoshi && !b._redone) {
+      // 物言い → 取り直し
+      const o = opponent();
+      const oppPlan = npcPlan(o, G.player);
+      const again = SUMO.bout.start(G.player, o, { tachiai: G.sel.tachiai, plan: G.sel.plan }, oppPlan, { interactive: false, redo: 1 });
+      SUMO.bout.runToEnd(again);
+      again.log.unshift({ t: "物言いがつきました――協議の結果、取り直しとなります。", cls: "call" });
+      again._redone = true;
+      again._eastIsPlayer = true;
+      G.bout = again;
+      G.screen = "boutAnim";
+      return;
+    }
+    const won = b.winner === "east";
+    const p = G.player, o = opponent();
+    const winner = won ? p : o, loser = won ? o : p;
+    const meta = L.record(G.bashoDay, winner, loser, b.kimarite);
+    p.fatigue = U.clamp(p.fatigue + 4, 0, 100);
+    if (won && meta.kinboshi) G.log.push(`${bashoLabel()} ${G.bashoDay}日目 金星（対 ${o.name}）`);
+    // 取組中の故障
+    if (!won && U.chance(0.03 + (p.fatigue / 100) * 0.05)) {
+      R.injure(p, U.pick(["右膝", "左膝", "腰", "足首"]), 1);
+      G.boutInjury = true;
+    } else G.boutInjury = false;
+    G.lastBout = {
+      won, kimarite: b.kimarite, opp: o.name, oppRank: B.shortLabel(o.rank),
+      kinboshi: !!meta.kinboshi, day: G.bashoDay,
+    };
+    G.screen = "boutResult";
+    save();
+  }
+
+  /** 取組結果から次へ。 */
+  function afterBout() {
+    const p = G.player;
+    const bouts = B.boutsOf(p.rank);
+    if (p.basho.results.length >= bouts || G.bashoDay >= 15) {
+      // 自分の取組は終わり。残りの日を消化する。
+      while (G.bashoDay < 15) {
+        G.bashoDay++;
+        const res = L.simulateDay(G.world, G.bashoDay, null);
+        G.digest.push({ day: G.bashoDay, results: res.results });
+      }
+      finishBasho();
+    } else {
+      advanceDay();
+    }
+  }
+
+  /** 休場する。 */
+  function withdraw() {
+    const p = G.player;
+    p.basho.kyujo = true;
+    while (G.bashoDay < 15) {
+      G.bashoDay++;
+      const res = L.simulateDay(G.world, G.bashoDay, null);
+      G.digest.push({ day: G.bashoDay, results: res.results });
+    }
+    finishBasho();
+  }
+
+  /* ---------- 千秋楽 ---------- */
+
+  function finishBasho() {
+    const p = G.player;
+    const div = p.rank.div;
+    // 各段の優勝を決める
+    const yushoByDiv = {};
+    for (let d = 0; d < D.DIVISIONS.length; d++) {
+      const { max, tied } = L.decideYusho(G.world, d);
+      let champ;
+      if (tied.length === 1) champ = tied[0];
+      else if (tied.some((r) => r.isPlayer) && d === div) {
+        // プレイヤーが絡む決定戦は実際に取る
+        G.playoff = { tied: tied.map((r) => r.id), max };
+        champ = null;
+      } else champ = L.resolvePlayoff(tied);
+      if (champ) { champ.basho.yusho = true; yushoByDiv[d] = champ; }
+      for (const r of tied) if (champ && r !== champ) r.basho.junYusho = true;
+    }
+    G.yushoByDiv = Object.fromEntries(Object.entries(yushoByDiv).map(([k, v]) => [k, v.id]));
+
+    if (G.playoff) { G.screen = "playoff"; return; }
+    concludeBasho();
+  }
+
+  /** 優勝決定戦（プレイヤー参加）を開始する。 */
+  function beginPlayoff() {
+    const ids = G.playoff.tied.filter((id) => id !== G.playerId);
+    let opp;
+    if (ids.length === 1) opp = G.world.byId[ids[0]];
+    else opp = L.resolvePlayoff(ids.map((id) => G.world.byId[id]));
+    G.playoff.oppId = opp.id;
+    G.bout = SUMO.bout.start(G.player, opp, { tachiai: G.sel.tachiai || "atari", plan: G.sel.plan || "zenshin" }, npcPlan(opp, G.player), { interactive: true });
+    G.bout._playoff = true;
+    G.screen = "boutAnim";
+  }
+
+  function resolvePlayoffBout() {
+    const b = G.bout;
+    const opp = G.world.byId[G.playoff.oppId];
+    const won = b.winner === "east";
+    const champ = won ? G.player : opp;
+    champ.basho.yusho = true;
+    (won ? opp : G.player).basho.junYusho = true;
+    G.yushoByDiv[G.player.rank.div] = champ.id;
+    G.lastBout = { won, kimarite: b.kimarite, opp: opp.name, oppRank: B.shortLabel(opp.rank), playoff: true, day: 15 };
+    G.playoff = null;
+    G.bout = null;
+    concludeBasho();
+    G.playoffResult = { won, oppName: opp.name, kimarite: b.kimarite };
+  }
+
+  /** 場所の締め。三賞・成績集計・履歴。 */
+  function concludeBasho() {
+    const p = G.player;
+    const bouts = B.boutsOf(p.rank);
+    const b = p.basho;
+    const kachikoshi = b.w > bouts / 2;
+    const sansho = computeSansho(p, b);
+    for (const k in sansho) if (sansho[k]) p.career.sansho[k]++;
+
+    G.result = {
+      label: bashoLabel(),
+      rank: { ...p.rank },
+      rankLabel: B.label(p.rank),
+      w: b.w, l: b.l, a: b.a,
+      kachikoshi,
+      yusho: !!b.yusho,
+      junYusho: !!b.junYusho,
+      kinboshi: b.kinboshi,
+      sansho,
+      kyujo: b.kyujo,
+      yushoByDiv: G.yushoByDiv,
+    };
+    G.history.push({
+      label: bashoLabel(), rank: B.shortLabel(p.rank), rankFull: B.label(p.rank),
+      w: b.w, l: b.l, a: b.a, yusho: !!b.yusho, sansho, div: p.rank.div,
+    });
+    L.closeBasho(G.world, bashoLabel());
+    G.screen = "bashoResult";
+    save();
+  }
+
+  /** 三賞の判定（幕内・三役未満が対象）。 */
+  function computeSansho(p, b) {
+    const out = { shukun: false, kanto: false, ginou: false };
+    if (p.rank.div !== D.MAKUUCHI) return out;
+    if (p.rank.title === "Y" || p.rank.title === "O") return out;
+    const bouts = 15;
+    if (b.w <= bouts / 2) return out;
+    const champId = G.yushoByDiv ? G.yushoByDiv[D.MAKUUCHI] : null;
+    const beatChamp = b.results.some((r) => r.win && r.opp === champId);
+    const beatYokozuna = b.results.some((r) => {
+      const o = G.world.byId[r.opp];
+      return r.win && o && o.rank.title === "Y";
+    });
+    if ((beatChamp || beatYokozuna) && b.w >= 8) out.shukun = true;
+    if (b.w >= 11 && p.rank.title === "M") out.kanto = true;
+    const tech = b.results.filter((r) => r.win && D.TECHNICAL_KIMARITE.has(r.kimarite)).length;
+    if (tech >= 5 && b.w >= 9) out.ginou = true;
+    return out;
+  }
+
+  /* ---------- 番付編成 ---------- */
+
+  function applyBanzuke() {
+    const p = G.player;
+    const before = { ...p.rank };
+    // プレイヤーも加齢・回復する
+    p.fatigue = U.clamp(p.fatigue - 22, 0, 100);
+    if (p.injury) R.heal(p, U.randInt(20, 40));
+    // 三十を過ぎれば、稽古をしても身体は落ちていく
+    if (p.age >= 31) {
+      const decay = 1 - (p.age - 30) * 0.006;
+      for (const k of D.STAT_KEYS) p.stats[k] = U.clamp(p.stats[k] * decay, 3, D.STAT_CAP);
+    }
+    const notes = L.interBasho(G.world, G.bashoIdx);
+    G.notes = {
+      before, beforeLabel: B.label(before), after: { ...p.rank }, afterLabel: B.label(p.rank),
+      promoted: B.rankValue(p.rank) < B.rankValue(before),
+      demoted: B.rankValue(p.rank) > B.rankValue(before),
+      newSekitori: notes.newSekitori.some((r) => r.isPlayer),
+      newOzeki: notes.newOzeki.some((r) => r.isPlayer),
+      newYokozuna: notes.newYokozuna.some((r) => r.isPlayer),
+      lostSekitori: notes.lostSekitori.some((r) => r.isPlayer),
+      others: {
+        ozeki: notes.newOzeki.filter((r) => !r.isPlayer).map((r) => r.name),
+        yokozuna: notes.newYokozuna.filter((r) => !r.isPlayer).map((r) => r.name),
+        retired: notes.retired.filter((r) => B.isSekitori(r.rank)).map((r) => `${B.shortLabel(r.rank)} ${r.name}`).slice(0, 6),
+      },
+    };
+    // 引退勧告（横綱の連続負け越し）
+    G.forceRetire = checkForceRetire();
+    G.screen = "banzukeUpdate";
+    save();
+  }
+
+  function checkForceRetire() {
+    const p = G.player;
+    const h = (p.sanyakuStreak || []).slice(-2);
+    if (p.rank.title === "Y" && h.length === 2 && h.every((x) => x.w < 8)) return "横綱としての責任";
+    if (p.age >= 40) return "年齢の限界";
+    return null;
+  }
+
+  /** 次の場所へ。 */
+  function nextBasho() {
+    G.bashoIdx++;
+    if (G.bashoIdx >= D.BASHO.length) { G.bashoIdx = 0; G.year++; }
+    G.bashoCount++;
+    G.day = 1;
+    G.flags.eventThisBasho = false;
+    G.scouting = Math.max(0, G.scouting - 1);
+    G.result = null; G.notes = null; G.playoffResult = null;
+    G.screen = "keiko";
+    save();
+  }
+
+  /* ==================================================================
+     引退
+     ================================================================== */
+
+  function canRetire() {
+    return G.player.career.basho >= 1;
+  }
+
+  /** 引退して、その一代を締めくくる。 */
+  function retire(reason) {
+    const p = G.player;
+    p.retired = true;
+    G.flags.retired = true;
+    const c = p.career;
+    const best = c.bestRank;
+    let ending = "danpatsu";
+    let toshiyori = null;
+    if (c.makuuchiBasho >= 20 || c.sekitoriBasho >= 30) {
+      toshiyori = U.pick(D.TOSHIYORI) + "親方";
+      ending = "oyakata";
+    }
+    if (best && best.div === D.MAKUUCHI && best.title === "Y") ending = "yokozuna";
+    G.ending = {
+      reason: reason || "自らの決断",
+      toshiyori,
+      kind: ending,
+      best: best ? B.label(best) : "―",
+      career: { ...c },
+      years: Math.max(1, Math.round(c.basho / 6)),
+    };
+    saveHallOfFame();
+    G.screen = "ending";
+    clearSave();
+  }
+
+  /* ==================================================================
+     セーブ／ロード
+     ================================================================== */
+
+  function serialize() {
+    const g = G;
+    const plain = {
+      version: g.version, screen: SAFE_SCREENS.has(g.screen) ? g.screen : "keiko",
+      year: g.year, bashoIdx: g.bashoIdx, bashoCount: g.bashoCount,
+      day: g.day, bashoDay: g.bashoDay, playerId: g.playerId, heyaId: g.heyaId,
+      sel: g.sel, flags: g.flags, history: g.history, rivalId: g.rivalId,
+      scouting: g.scouting, log: g.log, result: g.result, notes: g.notes,
+      todayBout: g.todayBout, yushoByDiv: g.yushoByDiv,
+      world: {
+        ids: g.world.ids,
+        byId: g.world.byId,
+        met: g.world._met ? Array.from(g.world._met) : [],
+      },
+    };
+    return JSON.stringify(plain);
+  }
+
+  function save() {
+    if (!G || !SAFE_SCREENS.has(G.screen)) return;
+    try { global.localStorage.setItem(SAVE_KEY, serialize()); } catch (e) { /* 容量超過などは黙って無視 */ }
+  }
+  function hasSave() {
+    try { return !!global.localStorage.getItem(SAVE_KEY); } catch (e) { return false; }
+  }
+  function clearSave() {
+    try { global.localStorage.removeItem(SAVE_KEY); } catch (e) { }
+  }
+
+  function load() {
+    let raw;
+    try { raw = global.localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
+    if (!raw) return null;
+    try {
+      const d = JSON.parse(raw);
+      if (d.version !== 2) return null;
+      G = {
+        ...d,
+        world: { ids: d.world.ids, byId: d.world.byId, _met: new Set(d.world.met || []) },
+        bout: null, digest: [], curEvent: null, eventGain: null, pendingDay: null,
+        lastKeiko: null, lastBout: null, overlay: null, playoff: null,
+      };
+      G.log = G.log || [];
+      bindHelpers(G);
+      if (!G.player) { G = null; return null; }
+      return G;
+    } catch (e) { return null; }
+  }
+
+  /* ---------- 殿堂（歴代の記録） ---------- */
+  function loadHallOfFame() {
+    try { return JSON.parse(global.localStorage.getItem(HOF_KEY) || "[]"); } catch (e) { return []; }
+  }
+  function saveHallOfFame() {
+    const p = G.player, c = p.career;
+    const entry = {
+      name: p.name, best: c.bestRank ? B.label(c.bestRank) : "―",
+      wins: c.wins, losses: c.losses, yusho: c.yusho.length,
+      basho: c.basho, year: G.year, heya: G.heya.name,
+    };
+    try {
+      const hof = loadHallOfFame();
+      hof.push(entry);
+      hof.sort((a, b) => b.yusho - a.yusho || b.wins - a.wins);
+      global.localStorage.setItem(HOF_KEY, JSON.stringify(hof.slice(0, 20)));
+    } catch (e) { }
+  }
+
+  SUMO.game = {
+    get, newGame, BUILDS, trainingAvailable, commitDay, applyDay, closeEvent, triggerEvent,
+    bashoInfo, bashoLabel, enterBasho, advanceDay, opponent, beginBout, resolveBout, afterBout,
+    withdraw, finishBasho, beginPlayoff, resolvePlayoffBout, applyBanzuke, nextBasho,
+    canRetire, retire, save, load, hasSave, clearSave, loadHallOfFame, npcPlan,
+    set(g) { G = g; },
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/art.js ===== */
+/* =====================================================================
+   白星街道 / art.js
+   ---------------------------------------------------------------------
+   画面に出る絵はすべてここで組み立てる（外部画像を使わない SVG 生成）。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+  const U = SUMO.util;
+  const D = SUMO.data;
+
+  const SKIN = "#e9bd92";
+  const SKIN_DARK = "#c8925f";
+  const HAIR = "#1d1710";
+
+  /**
+   * 力士の立ち姿。
+   * @param {object} o {mawashi, oicho(大銀杏), scale, skin}
+   */
+  function wrestler(o = {}) {
+    const m = o.mawashi || "#a32c22";
+    const skin = o.skin || SKIN;
+    const mage = o.oicho
+      ? `<path d="M46 12 q14 -13 28 0 q3 5 -2 6 l-24 0 q-5 -1 -2 -6z" fill="${HAIR}"/>
+         <path d="M50 8 q10 -7 20 0 q-2 -6 -10 -6 q-8 0 -10 6z" fill="${HAIR}"/>
+         <ellipse cx="73" cy="14" rx="9" ry="4.5" fill="${HAIR}"/>
+         <path d="M79 14 q7 -3 10 1 q-5 4 -10 3z" fill="${HAIR}"/>`
+      : `<path d="M47 13 q13 -12 26 0 q2 4 -2 5 l-22 0 q-4 -1 -2 -5z" fill="${HAIR}"/>
+         <rect x="71" y="10" width="14" height="5" rx="2.5" fill="${HAIR}"/>`;
+    // 下がり（まわしの前に垂れる紐）
+    let sagari = "";
+    for (let i = 0; i < 7; i++) sagari += `<rect x="${39 + i * 6}" y="86" width="2.6" height="15" rx="1.3" fill="#f1e6cc"/>`;
+
+    return `<svg viewBox="0 0 130 132" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g class="breath">
+      <!-- 脚 -->
+      <path d="M34 88 q-7 20 -3 34 q0 4 5 4 h9 q4 0 4 -4 q-1 -18 3 -32z" fill="${skin}"/>
+      <path d="M68 88 q-4 20 -3 34 q0 4 4 4 h10 q4 0 4 -4 q2 -16 -3 -34z" fill="${skin}"/>
+      <path d="M31 124 q-4 3 0 5 h18 q3 -2 0 -5z" fill="${SKIN_DARK}"/>
+      <path d="M69 124 q-4 3 0 5 h18 q3 -2 0 -5z" fill="${SKIN_DARK}"/>
+      <!-- 胴 -->
+      <ellipse cx="60" cy="62" rx="35" ry="32" fill="${skin}"/>
+      <path d="M32 72 q28 16 56 0" stroke="${SKIN_DARK}" fill="none" stroke-width="2.4" stroke-linecap="round" opacity=".65"/>
+      <ellipse cx="47" cy="50" rx="3" ry="2.2" fill="${SKIN_DARK}" opacity=".5"/>
+      <ellipse cx="73" cy="50" rx="3" ry="2.2" fill="${SKIN_DARK}" opacity=".5"/>
+      <!-- まわし -->
+      <path d="M25 74 q35 12 70 0 l0 14 q-35 12 -70 0z" fill="${m}"/>
+      <rect x="52" y="76" width="16" height="30" rx="7" fill="${m}"/>
+      ${sagari}
+      <!-- 腕（前へ出して構える） -->
+      <path d="M88 42 q20 -2 30 8 q5 5 0 9 q-6 4 -12 -1 q-9 -7 -20 -6z" fill="${skin}"/>
+      <ellipse cx="118" cy="53" rx="7" ry="6" fill="${skin}"/>
+      <path d="M90 60 q19 0 28 10 q5 5 -1 9 q-6 3 -11 -2 q-8 -7 -18 -7z" fill="${skin}"/>
+      <ellipse cx="117" cy="74" rx="7" ry="6" fill="${skin}"/>
+      <!-- 頭・首 -->
+      <path d="M50 38 q10 6 20 0 l0 -8 h-20z" fill="${SKIN_DARK}"/>
+      <ellipse cx="60" cy="27" rx="17" ry="16" fill="#f0c69d"/>
+      ${mage}
+      <ellipse cx="67" cy="27" rx="1.9" ry="2.6" fill="${HAIR}"/>
+      <ellipse cx="53" cy="27" rx="1.9" ry="2.6" fill="${HAIR}"/>
+      <path d="M62 33 q4 2 8 0" stroke="${SKIN_DARK}" fill="none" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M48 21 q6 -3 11 0" stroke="${HAIR}" fill="none" stroke-width="2" stroke-linecap="round"/>
+      <path d="M64 21 q6 -3 11 1" stroke="${HAIR}" fill="none" stroke-width="2" stroke-linecap="round"/>
+    </g></svg>`;
+  }
+
+  /** 行司。土俵の脇に立ち、軍配を上げる。 */
+  function gyoji() {
+    return `<svg viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M18 34 q-8 24 -6 50 h34 q3 -26 -5 -50z" fill="#4a2f6b"/>
+      <path d="M18 34 q12 8 24 0 l3 10 q-15 8 -30 0z" fill="#6b4593"/>
+      <rect x="26" y="70" width="10" height="16" rx="3" fill="#2f1f45"/>
+      <circle cx="30" cy="24" r="9" fill="#f0c69d"/>
+      <path d="M21 22 q9 -12 18 0 q1 -12 -9 -12 q-10 0 -9 12z" fill="#1d1710"/>
+      <path d="M39 30 q10 -6 14 -18" stroke="#f0c69d" fill="none" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="52" cy="9" rx="7" ry="9" fill="#c9a227" stroke="#6b4593" stroke-width="2"/>
+      <rect x="50" y="16" width="3" height="10" rx="1.5" fill="#6b4593"/>
+    </svg>`;
+  }
+
+  /** 土俵（吊り屋根と四房つき）。中に力士を配置する。 */
+  function dohyoStage(inner, opts = {}) {
+    const fusa = `<div class="fusa f-ao"></div><div class="fusa f-aka"></div>
+                  <div class="fusa f-shiro"></div><div class="fusa f-kuro"></div>`;
+    return `<div class="dohyo-stage ${opts.cls || ""}">
+      <div class="yakata">${fusa}</div>
+      <div class="kyakuseki"></div>
+      <div class="dohyo-block"></div>
+      <div class="ring"></div>
+      <div class="shikirisen l"></div><div class="shikirisen r"></div>
+      ${opts.gyoji ? `<div class="gyoji">${gyoji()}</div>` : ""}
+      ${inner}
+      ${opts.caption ? `<div class="stage-caption">${opts.caption}</div>` : ""}
+    </div>`;
+  }
+
+  /* ---------- ちゃんこ ---------- */
+  const NABE_COLOR = { meat: "#b4553c", fish: "#cfa96c", veg: "#5c8a4a", soup: "#e0cfa2" };
+  function nabe(kind) {
+    const soup = NABE_COLOR[kind] || "#b4553c";
+    const bits = {
+      meat: ["#8f3f2c", "#a85a3f", "#7d3324"], fish: ["#e8dcc0", "#d4bfa0", "#f0e6d2"],
+      veg: ["#3f6b32", "#6ea055", "#8fbb6a"], soup: ["#e8dcc0", "#c8a97a", "#f2e8cf"],
+    }[kind] || ["#8f3f2c", "#a85a3f", "#7d3324"];
+    let g = "";
+    for (let i = 0; i < 8; i++) {
+      const x = 26 + (i % 4) * 22 + (i > 3 ? 11 : 0), y = 29 + Math.floor(i / 4) * 9;
+      g += `<ellipse cx="${x}" cy="${y}" rx="8" ry="4.6" fill="${bits[i % 3]}"/>`;
+    }
+    return `<svg viewBox="0 0 140 78" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse cx="70" cy="34" rx="56" ry="17" fill="#3a3a42"/>
+      <ellipse cx="70" cy="33" rx="50" ry="13.5" fill="${soup}"/>
+      ${g}
+      <path d="M14 34 q0 30 56 30 q56 0 56 -30 z" fill="#4a4a54"/>
+      <ellipse cx="70" cy="34" rx="56" ry="17" fill="none" stroke="#2f2f38" stroke-width="4"/>
+      <rect x="0" y="30" width="18" height="8" rx="4" fill="#2f2f38"/>
+      <rect x="122" y="30" width="18" height="8" rx="4" fill="#2f2f38"/>
+    </svg>`;
+  }
+
+  /** 丼を抱えて食べる姿。 */
+  function eater() {
+    return `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse class="belly" cx="52" cy="66" rx="40" ry="30" fill="${SKIN}" style="transform-origin:52px 66px"/>
+      <path d="M18 78 q34 12 70 0 l0 10 q-34 12 -70 0z" fill="#a32c22"/>
+      <g class="head-grp">
+        <path d="M70 44 q18 -2 26 6 q3 6 -5 7 q-12 0 -21 -6z" fill="${SKIN}"/>
+        <g class="bowl-arm">
+          <path d="M84 38 q18 -2 24 6 q2 6 -6 6 q-11 0 -18 -6z" fill="${SKIN}"/>
+          <path d="M84 30 q13 16 26 0 z" fill="#f3ece0" stroke="#c9b895" stroke-width="1.5"/>
+          <rect x="104" y="14" width="3" height="20" rx="1.5" fill="#8a6134" transform="rotate(14 105 24)"/>
+          <rect x="109" y="14" width="3" height="20" rx="1.5" fill="#8a6134" transform="rotate(20 110 24)"/>
+        </g>
+        <circle cx="62" cy="28" r="16" fill="#f0c69d"/>
+        <path d="M50 17 q12 -12 24 0 l-4 5 q-8 -6.5 -16 0 z" fill="${HAIR}"/>
+        <ellipse class="jaw" cx="70" cy="34" rx="5" ry="4" fill="${SKIN_DARK}"/>
+        <ellipse cx="69" cy="25" rx="2" ry="2.6" fill="${HAIR}"/>
+        <path d="M58 24 q4 -2 8 0" stroke="${HAIR}" fill="none" stroke-width="1.6" stroke-linecap="round"/>
+      </g>
+    </svg>`;
+  }
+
+  /** 賜杯。優勝の場面で出す。 */
+  function trophy() {
+    return `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f0d68a"/><stop offset="0.5" stop-color="#c9a227"/><stop offset="1" stop-color="#8a6a12"/>
+      </linearGradient></defs>
+      <path d="M22 20 h36 v22 q0 20 -18 26 q-18 -6 -18 -26z" fill="url(#gold)"/>
+      <path d="M22 24 q-14 0 -14 12 q0 12 14 12" fill="none" stroke="url(#gold)" stroke-width="5"/>
+      <path d="M58 24 q14 0 14 12 q0 12 -14 12" fill="none" stroke="url(#gold)" stroke-width="5"/>
+      <rect x="35" y="66" width="10" height="12" fill="url(#gold)"/>
+      <rect x="24" y="78" width="32" height="7" rx="2" fill="url(#gold)"/>
+      <rect x="18" y="85" width="44" height="9" rx="2" fill="#5b4423"/>
+      <path d="M28 14 h24 l-4 8 h-16z" fill="#a32c22"/>
+    </svg>`;
+  }
+
+  /** 部屋の色（まわしの色に使う）。 */
+  function mawashiColor(r) {
+    const h = D.HEYA_BY_ID[r.heya];
+    if (h && h.color) return h.color;
+    const palette = ["#a32c22", "#2e5e52", "#2b2b33", "#b98a2f", "#4a2f6b", "#1f4e79"];
+    let s = 0;
+    for (let i = 0; i < r.name.length; i++) s += r.name.charCodeAt(i);
+    return palette[s % palette.length];
+  }
+  /** 体重から力士の大きさを決める。 */
+  const scaleOf = (weight) => U.clamp(0.8 + (weight - 100) / 250, 0.7, 1.28);
+
+  SUMO.art = { wrestler, gyoji, dohyoStage, nabe, eater, trophy, mawashiColor, scaleOf };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/ui.js ===== */
+/* =====================================================================
+   白星街道 / ui.js
+   ---------------------------------------------------------------------
+   画面の組み立て。状態を読み、HTML を返す。状態は書き換えない。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = (global.SUMO = global.SUMO || {});
+  const U = SUMO.util;
+  const D = SUMO.data;
+  const R = SUMO.rikishi;
+  const B = SUMO.banzuke;
+  const L = SUMO.league;
+  const A = SUMO.art;
+  const esc = U.esc;
+
+  const G = () => SUMO.game.get();
+
+  /* ================= 部品 ================= */
+
+  const panel = (title, body, small) =>
+    `<section class="panel">${title ? `<h2>${esc(title)}${small ? `<small>${esc(small)}</small>` : ""}</h2>` : ""}${body}</section>`;
+
+  const btn = (id, text, cls = "", attr = "") =>
+    `<button class="main ${cls}" id="${id}" ${attr}>${esc(text)}</button>`;
+
+  /** 能力バー。 */
+  function statBars(r, opts = {}) {
+    const cap = D.STAT_CAP;
+    const row = (k) => {
+      const v = r.stats[k];
+      const delta = opts.delta && opts.delta[k];
+      return `<div class="stat st-${k}">
+        <span class="lb">${D.STAT_LABELS[k]}</span>
+        <span class="bar"><i style="width:${U.clamp((v / cap) * 100, 0, 100)}%"></i></span>
+        <span class="val">${Math.round(v)}${delta ? `<em class="up">+${delta.toFixed(1)}</em>` : ""}</span>
+      </div>`;
+    };
+    return D.STAT_KEYS.map(row).join("");
+  }
+
+  /** 体重・疲労・故障の行。 */
+  function conditionRow(r) {
+    const fat = Math.round(r.fatigue);
+    const fatCls = fat >= 70 ? "warn" : fat >= 45 ? "mid" : "";
+    const inj = r.injury
+      ? `<span class="injury">故障：${esc(r.injury.part)}（${["", "軽度", "中度", "重度"][Math.round(U.clamp(r.injury.severity, 1, 3))]}）</span>`
+      : "";
+    return `<div class="meta-grid">
+      <div><span class="k">体重</span><b>${r.weight}</b> kg<br><span class="hint">${esc(R.weightHint(r.weight))}</span></div>
+      <div><span class="k">身長</span><b>${r.height}</b> cm<br><span class="hint">${esc(D.STYLES[r.style].label)}／${esc(r.region)}</span></div>
+      <div><span class="k">疲労</span><b class="${fatCls}">${fat}</b><br><span class="hint">${fat >= 70 ? "限界が近い" : fat >= 45 ? "疲れが残る" : "身体は軽い"}</span></div>
+      <div><span class="k">年齢</span><b>${r.age}</b> 歳<br><span class="hint">${r.age <= 22 ? "伸び盛り" : r.age <= 29 ? "働き盛り" : "曲がり角"}</span></div>
+    </div>${inj ? `<div class="injury-row">${inj}</div>` : ""}`;
+  }
+
+  /** 番付札。一文字ずつ縦に積む。 */
+  function fuda(text, cls = "") {
+    const chars = String(text).split("").map((c) => `<span>${esc(c)}</span>`).join("");
+    return `<div class="fuda ${cls} ${text.length > 2 ? "long" : ""}">${chars}</div>`;
+  }
+
+  /** 選択肢グリッド。 */
+  function optGrid(defs, selKey, cols, opts = {}) {
+    const g = G();
+    const items = Object.entries(defs).map(([k, v]) => {
+      const avail = opts.available ? opts.available(v) : true;
+      const sel = g.sel[selKey] === k ? "sel" : "";
+      return `<div class="opt ${sel} ${avail ? "" : "off"}" ${avail ? `data-sel="${selKey}" data-key="${k}"` : ""}>
+        <div class="t">${esc(v.label)}</div>
+        ${v.desc ? `<div class="d">${esc(v.desc)}</div>` : ""}
+        ${!avail && v.reqText ? `<div class="req">${esc(v.reqText)}</div>` : ""}
+      </div>`;
+    }).join("");
+    return `<div class="opts" style="--cols:${cols}">${items}</div>`;
+  }
+
+  /** 星取表。 */
+  function hoshitori(r, opts = {}) {
+    const total = B.boutsOf(r.rank);
+    const res = r.basho ? r.basho.results : [];
+    const shown = opts.hideLast ? res.slice(0, -1) : res;
+    let h = '<div class="hoshitori">';
+    for (let i = 0; i < total; i++) {
+      const x = shown[i];
+      if (x) {
+        h += `<span class="hoshi ${x.win ? "win" : "lose"} ${x.fusen ? "fusen" : ""}" title="${esc(x.oppName)}／${esc(x.kimarite)}"></span>`;
+      } else {
+        h += `<span class="hoshi ${i === shown.length ? "next" : ""}"></span>`;
+      }
+    }
+    return h + "</div>";
+  }
+
+  /** 優勝争い。 */
+  function yushoRace(div) {
+    const g = G();
+    const board = L.leaderboard(g.world, div, 6);
+    if (!board.length) return "";
+    // 自分が上位に入っていなければ、末尾に足して現在地を示す
+    if (!board.some((r) => r.isPlayer) && g.player.rank.div === div) board.push(g.player);
+    const rows = board.map((r) => `<tr class="${r.isPlayer ? "me" : ""}">
+      <td class="rk">${esc(B.shortLabel(r.rank))}</td>
+      <td>${esc(r.name)}</td>
+      <td class="rec">${r.basho.w}勝${r.basho.l}敗${r.basho.a ? r.basho.a + "休" : ""}</td></tr>`).join("");
+    return `<table class="mini-table">${rows}</table>`;
+  }
+
+  /** その日の主な取組。 */
+  function digestList(div) {
+    const g = G();
+    const lines = [];
+    for (const d of g.digest) {
+      for (const res of d.results) {
+        if (res.div !== div) continue;
+        const top = (r) => (r.rank.div === D.MAKUUCHI ? B.rankValue(r.rank) <= 42 : r.rank.num <= 6);
+        const notable = res.kinboshi || top(res.winner) || top(res.loser);
+        if (!notable) continue;
+        lines.push(`<li${res.kinboshi ? ' class="kinboshi"' : ""}>
+          <span class="d">${d.day}日目</span>
+          <b>${esc(res.winner.name)}</b> <span class="k">${esc(res.kimarite)}</span> ${esc(res.loser.name)}
+          ${res.kinboshi ? '<em class="badge">金星</em>' : ""}</li>`);
+      }
+    }
+    if (!lines.length) return "";
+    return `<ul class="digest">${lines.slice(-12).join("")}</ul>`;
+  }
+
+  /* ================= ヘッダ ================= */
+
+  function header() {
+    const g = G();
+    const p = g.player;
+    const inBasho = ["bashoIntro", "torikumi", "boutAnim", "boutResult", "playoff", "bashoResult"].includes(g.screen);
+    const sub = g.screen === "banzukeUpdate" ? "番付編成"
+      : g.screen === "ending" ? "引退"
+        : inBasho ? (g.bashoDay ? `${g.bashoDay}日目` : "初日")
+          : `稽古 ${Math.min(g.day, D.KEIKO_DAYS)}／${D.KEIKO_DAYS}日目`;
+    return `<header class="app-head">
+      ${fuda(B.divLabel(p.rank), B.isSanyaku(p.rank) ? "sanyaku" : "")}
+      <div class="head-info">
+        <div class="name">${esc(p.name)}${g.flags.married ? " ❁" : ""}</div>
+        <div class="rank-line">${esc(B.label(p.rank))}${p.kadoban ? '<span class="kadoban">角番</span>' : ""}</div>
+        <div class="basho-line">${g.year}年 ${esc(SUMO.game.bashoInfo().name)}・${esc(sub)}</div>
+        <div class="heya-line">${esc(D.heyaName(p.heya))}${p.injury ? `<span class="head-injury">${esc(p.injury.part)}に故障</span>` : ""}</div>
+      </div>
+      <nav class="head-nav">
+        <button class="ic" id="nav-banzuke" title="番付表">番</button>
+        <button class="ic" id="nav-records" title="記録">記</button>
+        <button class="ic" id="nav-sound" title="音のオン／オフ">${SUMO.sfx.isOn() ? "♪" : "✕"}</button>
+        <button class="ic" id="nav-menu" title="メニュー">…</button>
+      </nav>
+    </header>`;
+  }
+
+  /* ================= 画面 ================= */
+
+  function screenTitle() {
+    const has = SUMO.game.hasSave();
+    const hof = SUMO.game.loadHallOfFame();
+    return `<div class="title-screen">
+      <div class="brand">
+        <div class="brand-main">白星街道</div>
+        <div class="brand-sub">序ノ口から横綱へ</div>
+      </div>
+      <div class="title-art">${A.dohyoStage(
+      `<div class="wrestler" style="left:32%;transform:translateX(-50%) scale(.92)">${A.wrestler({ mawashi: "#a32c22", oicho: true })}</div>
+         <div class="wrestler flip" style="left:68%;transform:translateX(-50%) scale(.92)">${A.wrestler({ mawashi: "#2b2b33", oicho: true })}</div>`,
+      { gyoji: true })}</div>
+      <div class="title-btns">
+        ${has ? btn("btn-continue-save", "続きから", "aka") : ""}
+        ${btn("btn-newgame", "新しい力士で始める")}
+        ${hof.length ? btn("btn-hof", "殿堂", "ghost") : ""}
+      </div>
+      <p class="title-note">十二日の稽古、十五日の本場所。<br>番付は生き物であり、あなただけのものではない。</p>
+    </div>`;
+  }
+
+  function screenCreate(draft) {
+    const region = draft.region, heya = draft.heya;
+    const regionCards = D.REGIONS.map((r) => `
+      <div class="opt small ${region === r.name ? "sel" : ""}" data-create="region" data-key="${esc(r.name)}">
+        <div class="t">${esc(r.name)}</div>
+        <div class="d">${Object.entries(r.bonus).map(([k, v]) => `${D.STAT_LABELS[k]}${U.signed(v)}`).join(" ")}</div>
+      </div>`).join("");
+    const heyaCards = D.HEYA.map((h) => `
+      <div class="opt ${heya === h.id ? "sel" : ""}" data-create="heya" data-key="${h.id}">
+        <div class="t">${esc(h.name)}</div>
+        <div class="d">${esc(h.oyakata)}<br>${esc(h.desc)}</div>
+      </div>`).join("");
+    const buildCards = Object.entries(SUMO.game.BUILDS).map(([k, v]) => `
+      <div class="opt ${draft.build === k ? "sel" : ""}" data-create="build" data-key="${k}">
+        <div class="t">${esc(v.label)}</div><div class="d">${esc(v.desc)}<br>${v.weight}kg／${v.height}cm</div>
+      </div>`).join("");
+    const styleCards = Object.values(D.STYLES).map((s) => `
+      <div class="opt ${draft.style === s.id ? "sel" : ""}" data-create="style" data-key="${s.id}">
+        <div class="t">${esc(s.label)}</div><div class="d">${esc(s.desc)}</div>
+      </div>`).join("");
+
+    return `<div class="create-screen">
+      ${panel("四股名", `
+        <div class="name-row">
+          <input id="in-name" class="name-input" type="text" maxlength="8" value="${esc(draft.name)}" placeholder="四股名を入れる">
+          <button class="mini" id="btn-rollname">別の名</button>
+        </div>
+        <p class="hint">親方が半紙に書いてくれる、あなたの名前。</p>`)}
+      ${panel("出身地", `<div class="opts" style="--cols:3">${regionCards}</div>`)}
+      ${panel("入門する部屋", `<div class="opts" style="--cols:1">${heyaCards}</div>`)}
+      ${panel("体型", `<div class="opts" style="--cols:3">${buildCards}</div>`)}
+      ${panel("取り口", `<div class="opts" style="--cols:2">${styleCards}</div>`)}
+      ${btn("btn-enter", "入門する", "aka")}
+      ${btn("btn-back-title", "戻る", "ghost")}
+    </div>`;
+  }
+
+  function screenKeiko() {
+    const g = G(), p = g.player;
+    const scout = R.scoutLabel(p.potential || 130);
+    const left = D.KEIKO_DAYS - g.day + 1;
+    let body = "";
+
+    if (g.lastKeiko) {
+      const k = g.lastKeiko;
+      const gains = Object.entries(k.gained || {}).filter(([, v]) => Math.abs(v) > 0.05)
+        .map(([kk, v]) => `${D.STAT_LABELS[kk]} ${v > 0 ? "+" : ""}${v.toFixed(1)}`).join("　");
+      body += `<div class="flash">
+        <b>${esc(k.train.label)}</b> と <b>${esc(k.chanko.label)}</b>（${esc(k.amount.label)}）。
+        ${gains ? `<span class="gain">${esc(gains)}</span>` : ""}
+        ${k.notes.map((n) => `<span class="bad">${esc(n)}</span>`).join("")}
+      </div>`;
+    }
+
+    body += panel("力士台帳", `
+      ${statBars(p)}
+      ${conditionRow(p)}
+      <div class="scout ${scout.cls}">親方の見立て：${esc(scout.text)}</div>`);
+
+    body += panel("今日の稽古", optGrid(D.TRAININGS, "train", 2, {
+      available: (t) => SUMO.game.trainingAvailable(t),
+    }), `本場所まであと ${left} 日`);
+
+    body += panel("今日のちゃんこ", `
+      ${optGrid(D.CHANKO, "chanko", 2)}
+      <div class="amount-row">${Object.entries(D.AMOUNTS).map(([k, v]) =>
+      `<div class="opt tiny ${g.sel.amount === k ? "sel" : ""}" data-sel="amount" data-key="${k}"><div class="t">${esc(v.label)}</div></div>`).join("")}</div>`);
+
+    const ready = g.sel.train && g.sel.chanko;
+    body += `<div class="btn-row">
+      ${btn("btn-endday", "一日を終える", "aka", ready ? "" : "disabled")}
+      ${btn("btn-endday-x3", "この内容で三日", "ghost", ready && left >= 3 ? "" : "disabled")}
+    </div>`;
+    return body;
+  }
+
+  function screenKeikoAnim() {
+    const g = G(), p = g.player, pd = g.pendingDay;
+    const tr = D.TRAININGS[pd.train];
+    const s = A.scaleOf(p.weight);
+    const partner = pd.train === "butsukari" || pd.train === "moshiai" || pd.train === "sanban";
+    const outer = pd.train === "butsukari" ? "t-dash" : pd.train === "suriashi" ? "t-slide" : "";
+    const px = pd.train === "moshiai" ? 40 : partner ? 30 : 50;
+    const inner = `
+      ${pd.train === "teppo" ? '<div class="teppo-pole"></div>' : ""}
+      ${partner ? `<div class="wrestler flip" style="left:${pd.train === "moshiai" ? 60 : 66}%;transform:translateX(-50%) scale(${s * 0.97})">
+          <div class="mover ${pd.train === "moshiai" ? "anim-moshiai-r" : ""}">${A.wrestler({ mawashi: "#2e5e52" })}</div></div>` : ""}
+      <div class="wrestler ${outer}" style="left:${px}%;transform:translateX(-50%) scale(${s})">
+        <div class="mover anim-${pd.train}">${A.wrestler({ mawashi: A.mawashiColor(p), oicho: B.isSekitori(p.rank) })}</div>
+      </div>`;
+    return panel(`稽古 ${g.day}日目`,
+      A.dohyoStage(inner, { caption: `${esc(tr.label)}${["rest", "chiryo", "kenkyu"].includes(tr.id) ? "" : "稽古"}`, cls: "keiko" }) +
+      `<div class="tap-hint">画面をタップで進む</div>`);
+  }
+
+  function screenEatAnim() {
+    const g = G(), pd = g.pendingDay;
+    const ch = D.CHANKO[pd.chanko], am = D.AMOUNTS[pd.amount];
+    let steam = "";
+    for (let i = 0; i < 6; i++) steam += `<span style="left:${8 + i * 18}%;animation-delay:${i * 0.38}s"></span>`;
+    return panel(`ちゃんこ ${g.day}日目`, `
+      <div class="eat-stage">
+        <div class="eat-table"></div>
+        <div class="eater">${A.eater()}</div>
+        <div class="nabe">${A.nabe(pd.chanko)}</div>
+        <div class="steam">${steam}</div>
+        <div class="stage-caption">${esc(ch.label)}を${esc(am.label)}に</div>
+      </div>
+      <div class="tap-hint">画面をタップで進む</div>`);
+  }
+
+  function screenEvent() {
+    const g = G(), ev = g.curEvent;
+    const petals = ["kekkon", "okamisan", "kodomo"].includes(ev.id)
+      ? Array.from({ length: 9 }, (_, i) => `<span class="sakura" style="left:${8 + i * 10}%;animation-delay:${i * 0.35}s">❀</span>`).join("")
+      : "";
+    return `<div class="event-card">${petals}
+      <div class="ev-icon">${esc(ev.icon)}</div>
+      <div class="ev-title">${esc(ev.title)}</div>
+      <div class="ev-text">${esc(ev.text(g))}</div>
+      ${g.eventGain ? `<div class="ev-gain">${esc(g.eventGain)}</div>` : ""}
+      ${btn("btn-closeevent", "承知")}
+    </div>`;
+  }
+
+  function screenBashoIntro() {
+    const g = G(), p = g.player, info = SUMO.game.bashoInfo();
+    const div = D.DIVISIONS[p.rank.div];
+    const rivals = L.byDivision(g.world, p.rank.div)
+      .filter((r) => !r.isPlayer)
+      .slice(0, 5)
+      .map((r) => `<tr><td class="rk">${esc(B.shortLabel(r.rank))}</td><td>${esc(r.name)}</td>
+        <td class="rec">${r.age}歳 ${esc(D.STYLES[r.style].label)}</td></tr>`).join("");
+    return panel(`${g.year}年 ${info.name}`, `
+      <div class="basho-hero">
+        <div class="venue">${esc(info.venue)}<span>${esc(info.city)}・${info.month}月</span></div>
+        <div class="my-rank">
+          ${fuda(B.divLabel(p.rank), "big")}
+          <div class="rank-full">${esc(B.label(p.rank))}</div>
+          <div class="hint">${esc(div.name)}／${div.bouts}番</div>
+        </div>
+      </div>
+      <p class="lead">土俵の土は今日も硬い。${esc(p.name)}、${g.bashoCount}度目の本場所。</p>
+      ${panel("同じ段の力士", `<table class="mini-table">${rivals}</table>`)}
+      ${btn("btn-startbasho", "初日を迎える", "aka")}`);
+  }
+
+  function screenTorikumi() {
+    const g = G(), p = g.player;
+    const o = SUMO.game.opponent();
+    if (!o) return "";
+    const past = p.career && g.history ? null : null;
+    const scoutOn = g.scouting > 0;
+    return `
+      ${panel("星取表", hoshitori(p), `${p.basho.w}勝${p.basho.l}敗${p.basho.a ? p.basho.a + "休" : ""}`)}
+      ${panel(`${g.bashoDay}日目の取組`, `
+        ${A.dohyoStage(stageWrestlers(p, o), { gyoji: true })}
+        <div class="opp-card">
+          <div class="opp-l">
+            <div class="rk">${esc(B.label(o.rank))}</div>
+            <div class="oname">${esc(o.name)}</div>
+          </div>
+          <div class="opp-r">
+            <div>${o.basho.w}勝${o.basho.l}敗</div>
+            <div class="hint">${esc(R.typeLabel(o))}／${esc(D.STYLES[o.style].label)}</div>
+            <div class="hint">${o.age}歳 ${o.weight}kg ${esc(D.heyaName(o.heya))}</div>
+          </div>
+        </div>
+        ${scoutOn ? `<div class="scout-note">研究の成果：${esc(scoutHint(o))}</div>` : ""}
+        <h3 class="sub-h">立合い</h3>
+        ${optGrid(D.TACHIAI, "tachiai", 2)}
+        <h3 class="sub-h">作戦</h3>
+        ${optGrid(D.PLANS, "plan", 3)}
+        ${btn("btn-fight", "仕切りへ", "aka", g.sel.tachiai && g.sel.plan ? "" : "disabled")}
+        ${p.injury && p.injury.severity >= 2 ? btn("btn-withdraw", "休場する", "ghost") : ""}
+      `)}`;
+  }
+
+  function scoutHint(o) {
+    const s = D.STYLES[o.style];
+    const tips = {
+      oshi: "立合いから一気に来る。受けると危ない",
+      migi: "右を差してくる。まわしを与えるな",
+      hidari: "左四つに組みたがる。距離を取れ",
+      waza: "引き技と足技がある。前に落ちるな",
+    };
+    return `${tips[s.id]}。${o.stats.stamina < o.stats.power - 10 ? "息は長くない" : "長い相撲にも強い"}。`;
+  }
+
+  function stageWrestlers(east, west, opts = {}) {
+    const sE = A.scaleOf(east.weight), sW = A.scaleOf(west.weight);
+    return `<div class="wrestler" id="w-east" style="left:${opts.eastX || 30}%;transform:translateX(-50%) scale(${sE})">
+        ${A.wrestler({ mawashi: A.mawashiColor(east), oicho: B.isSekitori(east.rank) })}</div>
+      <div class="wrestler flip" id="w-west" style="left:${opts.westX || 70}%;transform:translateX(-50%) scale(${sW})">
+        ${A.wrestler({ mawashi: A.mawashiColor(west), oicho: B.isSekitori(west.rank) })}</div>`;
+  }
+
+  function screenBoutAnim() {
+    const g = G(), b = g.bout;
+    const east = b.east, west = b.west;
+    return panel(`${g.bashoDay}日目${b._playoff ? "・優勝決定戦" : ""}`, `
+      ${A.dohyoStage(stageWrestlers(east, west), { gyoji: true })}
+      <div class="bout-names">
+        <span class="e">東 ${esc(east.name)}</span><span class="sep">―</span><span class="w">西 ${esc(west.name)}</span>
+      </div>
+      <div class="blog" id="blog"></div>
+      <div id="choice-slot"></div>
+      <div id="bout-btn-slot"></div>`);
+  }
+
+  /** 勝負どころの選択肢。 */
+  function choiceHTML(pending) {
+    return `<div class="choice">
+      <div class="choice-title">${esc(pending.title)}</div>
+      <div class="opts" style="--cols:3">
+        ${pending.options.map((o) => `<div class="opt" data-choice="${o.key}">
+          <div class="t">${esc(o.label)}</div><div class="d">${esc(o.desc)}</div></div>`).join("")}
+      </div>
+    </div>`;
+  }
+
+  function screenBoutResult() {
+    const g = G(), p = g.player, lb = g.lastBout;
+    const div = p.rank.div;
+    const done = p.basho.results.length >= B.boutsOf(p.rank);
+    return `
+      ${panel("星取表", hoshitori(p), `${p.basho.w}勝${p.basho.l}敗${p.basho.a ? p.basho.a + "休" : ""}`)}
+      ${panel("結果", `
+        <div class="result-kimarite">${esc(lb.kimarite)}</div>
+        <div class="result-big ${lb.won ? "win" : "lose"}">${lb.won ? "勝ち" : "負け"}</div>
+        <div class="result-note">${esc(lb.oppRank)} ${esc(lb.opp)}${lb.kinboshi ? '<div class="kinboshi-note">金星！横綱を倒した</div>' : ""}</div>
+        ${g.boutInjury ? '<div class="bad center">土俵上で身体を痛めた。</div>' : ""}
+      `)}
+      ${panel("優勝争い", yushoRace(div))}
+      ${digestList(div) ? panel("この日の土俵", digestList(div)) : ""}
+      ${btn("btn-nextday", done ? "千秋楽を終える" : "翌日へ", "aka")}`;
+  }
+
+  function screenPlayoff() {
+    const g = G();
+    const others = g.playoff.tied.filter((id) => id !== g.playerId).map((id) => g.world.byId[id].name);
+    return panel("優勝決定戦", `
+      <p class="lead center">${g.playoff.max}勝で並んだ。<br>${esc(others.join("、"))} との決定戦。</p>
+      <div class="trophy">${A.trophy()}</div>
+      <h3 class="sub-h">立合い</h3>
+      ${optGrid(D.TACHIAI, "tachiai", 2)}
+      <h3 class="sub-h">作戦</h3>
+      ${optGrid(D.PLANS, "plan", 3)}
+      ${btn("btn-playoff", "土俵へ上がる", "aka", g.sel.tachiai && g.sel.plan ? "" : "disabled")}`);
+  }
+
+  function screenBashoResult() {
+    const g = G(), p = g.player, m = g.result;
+    const champ = m.yushoByDiv && m.yushoByDiv[D.MAKUUCHI] ? g.world.byId[m.yushoByDiv[D.MAKUUCHI]] : null;
+    const sansho = Object.entries({ shukun: "殊勲賞", kanto: "敢闘賞", ginou: "技能賞" })
+      .filter(([k]) => m.sansho[k]).map(([, v]) => v);
+    return panel(`${esc(m.label)} 千秋楽`, `
+      <div class="result-rank">${esc(m.rankLabel)}</div>
+      <div class="result-big">${m.w}勝${m.l}敗${m.a ? `${m.a}休` : ""}</div>
+      ${m.yusho ? `<div class="yusho-banner">${esc(D.DIVISIONS[m.rank.div].name)}優勝</div><div class="trophy">${A.trophy()}</div>` : ""}
+      ${g.playoffResult ? `<div class="note center">優勝決定戦：${esc(g.playoffResult.oppName)}に${g.playoffResult.won ? "勝った" : "敗れた"}（${esc(g.playoffResult.kimarite)}）</div>` : ""}
+      ${m.junYusho && !m.yusho ? '<div class="note center">同点ならず――次点。</div>' : ""}
+      <div class="result-note center">
+        ${m.kyujo ? "休場。土俵に上がれなかった。" : m.kachikoshi ? "勝ち越し。" : "負け越し。"}
+        ${m.kinboshi ? `<br>金星 ${m.kinboshi}個` : ""}
+        ${sansho.length ? `<br><span class="promo">${esc(sansho.join("・"))} 受賞</span>` : ""}
+      </div>
+      ${champ ? `<div class="champ-note">幕内最高優勝：${esc(B.shortLabel(champ.rank))} ${esc(champ.name)}（${champ.basho.w}勝${champ.basho.l}敗）</div>` : ""}
+      ${hoshitori(p)}
+      ${btn("btn-banzuke", "番付編成会議へ", "aka")}`);
+  }
+
+  function screenBanzukeUpdate() {
+    const g = G(), n = g.notes, p = g.player;
+    let headline = "番付据え置き";
+    let cls = "";
+    if (n.newYokozuna) { headline = "横綱昇進"; cls = "grand"; }
+    else if (n.newOzeki) { headline = "大関昇進"; cls = "grand"; }
+    else if (n.newSekitori) { headline = "新十両――関取誕生"; cls = "grand"; }
+    else if (n.lostSekitori) { headline = "関取陥落"; cls = "bad"; }
+    else if (n.promoted) { headline = "番付を上げた"; cls = "good"; }
+    else if (n.demoted) { headline = "番付を下げた"; cls = "bad"; }
+
+    const others = [];
+    if (n.others.yokozuna.length) others.push(`横綱昇進：${n.others.yokozuna.join("、")}`);
+    if (n.others.ozeki.length) others.push(`大関昇進：${n.others.ozeki.join("、")}`);
+    if (n.others.retired.length) others.push(`引退：${n.others.retired.join("、")}`);
+
+    return panel("新番付発表", `
+      <div class="banzuke-move ${cls}">
+        <div class="from">${esc(n.beforeLabel)}</div>
+        <div class="arrow">▼</div>
+        <div class="to">${fuda(B.divLabel(p.rank), "big")}${esc(n.afterLabel)}</div>
+      </div>
+      <div class="headline ${cls}">${esc(headline)}</div>
+      ${n.newYokozuna ? '<p class="lead center">横綱審議委員会、満場一致。<br>これより先、あなたに降りる番付はない。</p>' : ""}
+      ${n.newOzeki ? '<p class="lead center">使者が部屋に来た。「大関の地位を汚さぬよう、精進いたします」。</p>' : ""}
+      ${n.newSekitori ? '<p class="lead center">関取。付け人がつき、大銀杏を結い、給金が出る。<br>ここから先が、本当の相撲だ。</p>' : ""}
+      ${others.length ? `<ul class="news">${others.map((o) => `<li>${esc(o)}</li>`).join("")}</ul>` : ""}
+      ${g.forceRetire ? `<div class="bad center">${esc(g.forceRetire)}により、引退を考える時が来た。</div>${btn("btn-retire", "引退する", "ghost")}` : ""}
+      ${btn("btn-nextbasho", "次の場所へ", "aka")}`);
+  }
+
+  function screenEnding() {
+    const g = G(), e = g.ending, c = e.career, p = g.player;
+    const kinds = {
+      yokozuna: "横綱として土俵を去る。断髪式には、かつて倒した男たちが鋏を持って並んだ。",
+      oyakata: `年寄${esc(e.toshiyori || "")}を襲名し、後進を育てる道へ進んだ。`,
+      danpatsu: "髷を落とした。土俵の砂の感触だけは、生涯忘れないだろう。",
+    };
+    return panel("引退", `
+      <div class="ending">
+        <div class="ending-name">${esc(p.name)}</div>
+        <div class="ending-best">最高位　${esc(e.best)}</div>
+        <p class="lead center">${kinds[e.kind]}</p>
+        <table class="career-table">
+          <tr><th>通算</th><td>${c.wins}勝 ${c.losses}敗${c.absences ? ` ${c.absences}休` : ""}</td></tr>
+          <tr><th>出場</th><td>${c.basho}場所（約${e.years}年）</td></tr>
+          <tr><th>幕内</th><td>${c.makuuchiBasho}場所 ${c.makuuchiWins}勝${c.makuuchiLosses}敗</td></tr>
+          <tr><th>関取</th><td>${c.sekitoriBasho}場所</td></tr>
+          <tr><th>三役</th><td>${c.sanyakuBasho}場所</td></tr>
+          <tr><th>優勝</th><td>${c.yusho.length}回</td></tr>
+          <tr><th>三賞</th><td>殊勲${c.sansho.shukun}・敢闘${c.sansho.kanto}・技能${c.sansho.ginou}</td></tr>
+          <tr><th>金星</th><td>${c.kinboshi}個</td></tr>
+          <tr><th>勝ち越し</th><td>${c.kachikoshi}場所／負け越し ${c.makekoshi}場所</td></tr>
+        </table>
+      </div>
+      ${btn("btn-title", "土俵を降りる", "aka")}`);
+  }
+
+  /* ================= 重ね画面 ================= */
+
+  function overlayBanzuke(divIdx) {
+    const g = G();
+    const tabs = D.DIVISIONS.slice().reverse().map((d) =>
+      `<button class="tab ${d.index === divIdx ? "on" : ""}" data-bz="${d.index}">${esc(d.name)}</button>`).join("");
+    // 同じ地位（同じ格・同じ枚数）の東西で一行にまとめる。
+    // 大関が三人といった半端な人数でも、東西がずれないようにする。
+    const members = L.byDivision(g.world, divIdx);
+    const groups = [];
+    const index = new Map();
+    for (const r of members) {
+      const key = (r.rank.title || "-") + "/" + r.rank.num;
+      if (!index.has(key)) { index.set(key, groups.length); groups.push({ rank: r.rank, E: null, W: null }); }
+      groups[index.get(key)][r.rank.side] = r;
+    }
+    const cell = (r) => r
+      ? `<td class="bz-name ${r.isPlayer ? "me" : ""}">${esc(r.name)}<span class="bz-sub">${r.age}歳 ${r.weight}kg</span></td>`
+      : '<td class="bz-name"></td>';
+    const rows = groups.map((grp) => {
+      const rk = grp.rank;
+      const mid = rk.div === D.MAKUUCHI && rk.title !== "M"
+        ? D.TITLES[rk.title].name + (rk.num > 1 ? U.kansuji(rk.num) : "")
+        : `${U.kansuji(rk.num)}枚目`;
+      return `<tr>${cell(grp.E)}<td class="bz-mid">${esc(mid)}</td>${cell(grp.W)}</tr>`;
+    }).join("");
+    return `<div class="overlay-inner">
+      <div class="tabs">${tabs}</div>
+      <div class="bz-head"><span>東</span><span>${esc(D.DIVISIONS[divIdx].name)}</span><span>西</span></div>
+      <table class="banzuke-table">${rows}</table>
+    </div>`;
+  }
+
+  function overlayRecords() {
+    const g = G(), p = g.player, c = p.career;
+    const rows = g.history.slice().reverse().slice(0, 40).map((h) => {
+      const marks = [];
+      if (h.yusho) marks.push('<em class="badge gold">優</em>');
+      if (h.sansho) {
+        if (h.sansho.shukun) marks.push('<em class="badge">殊</em>');
+        if (h.sansho.kanto) marks.push('<em class="badge">敢</em>');
+        if (h.sansho.ginou) marks.push('<em class="badge">技</em>');
+      }
+      const kk = h.w > (h.w + h.l + h.a) / 2;
+      return `<tr><td class="lb">${esc(h.label)}</td><td class="rk">${esc(h.rank)}</td>
+        <td class="rec ${kk ? "kk" : "mk"}">${h.w}勝${h.l}敗${h.a ? h.a + "休" : ""}</td>
+        <td class="mk-col">${marks.join("")}</td></tr>`;
+    }).join("");
+    return `<div class="overlay-inner">
+      <h2>${esc(p.name)}　生涯成績</h2>
+      <table class="career-table">
+        <tr><th>現在の地位</th><td>${esc(B.label(p.rank))}</td></tr>
+        <tr><th>最高位</th><td>${esc(c.bestRank ? B.label(c.bestRank) : "―")}</td></tr>
+        <tr><th>通算</th><td>${c.wins}勝 ${c.losses}敗${c.absences ? ` ${c.absences}休` : ""}（${c.basho}場所）</td></tr>
+        <tr><th>幕内</th><td>${c.makuuchiWins}勝 ${c.makuuchiLosses}敗（${c.makuuchiBasho}場所）</td></tr>
+        <tr><th>優勝</th><td>${c.yusho.length}回</td></tr>
+        <tr><th>三賞</th><td>殊勲${c.sansho.shukun}・敢闘${c.sansho.kanto}・技能${c.sansho.ginou}</td></tr>
+        <tr><th>金星</th><td>${c.kinboshi}個</td></tr>
+      </table>
+      <h2>場所の記録</h2>
+      <table class="history-table">${rows || '<tr><td class="hint">まだ本場所を経験していない。</td></tr>'}</table>
+    </div>`;
+  }
+
+  function overlayMenu() {
+    const g = G();
+    return `<div class="overlay-inner menu">
+      <h2>メニュー</h2>
+      <p class="hint">進行は一日ごとに自動で保存される。</p>
+      ${btn("btn-save", "いま保存する", "ghost")}
+      ${SUMO.game.canRetire() ? btn("btn-retire", "引退する", "ghost") : ""}
+      ${btn("btn-quit-title", "タイトルへ戻る", "ghost")}
+      <p class="hint small">タイトルへ戻っても、保存された記録は残る。</p>
+    </div>`;
+  }
+
+  function overlayHof() {
+    const hof = SUMO.game.loadHallOfFame();
+    const rows = hof.map((h, i) => `<tr><td>${i + 1}</td><td>${esc(h.name)}</td><td>${esc(h.best)}</td>
+      <td>${h.yusho}回</td><td>${h.wins}勝${h.losses}敗</td></tr>`).join("");
+    return `<div class="overlay-inner">
+      <h2>殿堂</h2>
+      <table class="history-table"><tr><th>#</th><th>四股名</th><th>最高位</th><th>優勝</th><th>通算</th></tr>${rows}</table>
+    </div>`;
+  }
+
+  /* ================= 描画 ================= */
+
+  function render(root, draft) {
+    const g = G();
+    let html = "";
+    if (!g || g.screen === "title") {
+      root.className = "title-mode";
+      html = screenTitle() + footer();
+      if (g && g.overlay) html += overlayShell(g.overlay);
+      root.innerHTML = html;
+      return;
+    }
+    root.className = "";
+    const s = g.screen;
+    if (s === "create") html = screenCreate(draft);
+    else {
+      html += header();
+      if (s === "keiko") html += screenKeiko();
+      else if (s === "keikoAnim") html += screenKeikoAnim();
+      else if (s === "eatAnim") html += screenEatAnim();
+      else if (s === "event") html += screenEvent();
+      else if (s === "bashoIntro") html += screenBashoIntro();
+      else if (s === "torikumi") html += screenTorikumi();
+      else if (s === "boutAnim") html += screenBoutAnim();
+      else if (s === "boutResult") html += screenBoutResult();
+      else if (s === "playoff") html += screenPlayoff();
+      else if (s === "bashoResult") html += screenBashoResult();
+      else if (s === "banzukeUpdate") html += screenBanzukeUpdate();
+      else if (s === "ending") html += screenEnding();
+    }
+    html += footer();
+    if (g.overlay) html += overlayShell(g.overlay);
+    root.innerHTML = html;
+  }
+
+  function overlayShell(ov) {
+    const inner = ov.kind === "banzuke" ? overlayBanzuke(ov.div)
+      : ov.kind === "records" ? overlayRecords()
+        : ov.kind === "hof" ? overlayHof()
+          : overlayMenu();
+    return `<div class="overlay" id="overlay"><div class="overlay-card">
+      <button class="close" id="ov-close">×</button>${inner}</div></div>`;
+  }
+
+  const footer = () => `<footer>白星街道 v2.0 — 稽古と、飯と、番付と</footer>`;
+
+  SUMO.ui = { render, choiceHTML, hoshitori, stageWrestlers, screenTitle, overlayBanzuke };
+})(typeof window !== "undefined" ? window : globalThis);
+
+/* ===== assets/js/main.js ===== */
+/* =====================================================================
+   白星街道 / main.js
+   ---------------------------------------------------------------------
+   起動と入力の受け口。演出（間・音・動き）の制御もここで行う。
+   ===================================================================== */
+(function (global) {
+  "use strict";
+  const SUMO = global.SUMO;
+  const U = SUMO.util;
+  const D = SUMO.data;
+  const R = SUMO.rikishi;
+  const B = SUMO.banzuke;
+  const Game = SUMO.game;
+  const Bout = SUMO.bout;
+  const UI = SUMO.ui;
+  const Sfx = SUMO.sfx;
+
+  const app = document.getElementById("app");
+  const timers = [];
+  const reduce = () => U.prefersReducedMotion();
+
+  /** 入門画面の下書き。 */
+  let draft = null;
+  function newDraft() {
+    return {
+      name: R.makeShikona(), region: D.REGIONS[1].name, heya: D.HEYA[0].id,
+      build: "standard", style: "migi",
+    };
+  }
+
+  function clearTimers() { while (timers.length) clearTimeout(timers.pop()); }
+  function later(fn, ms) { const t = setTimeout(fn, ms); timers.push(t); return t; }
+
+  function render() {
+    UI.render(app, draft);
+    if (SUMO.syncSound) SUMO.syncSound();
+    const g = Game.get();
+    if (!g) return;
+    if (g.screen === "keikoAnim") startKeikoAnim();
+    else if (g.screen === "eatAnim") startEatAnim();
+    else if (g.screen === "boutAnim") startBoutAnim();
+  }
+  SUMO.render = render;
+
+  /* ================= 稽古の演出 ================= */
+
+  function startKeikoAnim() {
+    const g = Game.get();
+    const kind = g.pendingDay.train;
+    if (kind === "shiko") [0, 0.55, 1.1, 1.65, 2.2].forEach((d) => Sfx.stomp(d));
+    else if (kind === "teppo") for (let i = 0; i < 12; i++) Sfx.slap(i * 0.22);
+    else if (kind === "butsukari") [0, 0.6, 1.2, 1.8, 2.4].forEach((d) => { Sfx.clash(d); Sfx.push(d + 0.2); });
+    else if (kind === "moshiai" || kind === "sanban") for (let i = 0; i < 8; i++) Sfx.push(i * 0.32);
+    else if (kind === "suriashi") [0, 0.4, 0.8, 1.2, 1.6, 2.0].forEach((d) => Sfx.push(d));
+    if (reduce()) return toEat();
+    later(toEat, 2600);
+  }
+
+  function toEat() {
+    clearTimers();
+    const g = Game.get();
+    if (!g || g.screen !== "keikoAnim") return;
+    g.screen = "eatAnim";
+    render();
+  }
+
+  function startEatAnim() {
+    const g = Game.get();
+    const amt = g.pendingDay.amount;
+    const bites = amt === "big" ? 7 : amt === "light" ? 3 : 5;
+    Sfx.boil(0);
+    for (let i = 0; i < bites; i++) { Sfx.slurp(0.3 + i * 0.42); Sfx.chew(0.48 + i * 0.42); }
+    if (reduce()) return finishDay();
+    later(finishDay, 800 + bites * 400);
+  }
+
+  function finishDay() {
+    clearTimers();
+    const g = Game.get();
+    if (!g || (g.screen !== "eatAnim" && g.screen !== "keikoAnim")) return;
+    Sfx.gain();
+    Game.applyDay();
+    if (Game.get().screen === "event") Sfx.event();
+    render();
+  }
+
+  /* ================= 取組の演出 ================= */
+
+  let boutState = null;
+
+  function startBoutAnim() {
+    const g = Game.get();
+    boutState = { shownLog: 0, shownFrame: 0 };
+    Sfx.ki(0); Sfx.taiko(0.2);
+    flushLog();
+    stepBout(reduce() ? 60 : 900);
+  }
+
+  /** ログを追記表示する。 */
+  function flushLog() {
+    const g = Game.get();
+    const b = g.bout;
+    const blog = document.getElementById("blog");
+    if (!blog || !b) return;
+    for (let i = boutState.shownLog; i < b.log.length; i++) {
+      const l = b.log[i];
+      const p = document.createElement("p");
+      p.className = l.cls || "";
+      p.textContent = l.t;
+      blog.appendChild(p);
+    }
+    boutState.shownLog = b.log.length;
+    blog.scrollTop = blog.scrollHeight;
+  }
+
+  /** 土俵上の位置を反映する。 */
+  function applyFrames() {
+    const g = Game.get(), b = g.bout;
+    const E = document.getElementById("w-east"), W = document.getElementById("w-west");
+    if (!E || !W) return;
+    const sE = SUMO.art.scaleOf(b.east.weight), sW = SUMO.art.scaleOf(b.west.weight);
+    const set = (el, x, s, extra = "") => {
+      el.style.left = x + "%";
+      el.style.transform = `translateX(-50%) scale(${s}) ${extra}`;
+    };
+    for (let i = boutState.shownFrame; i < b.frames.length; i++) {
+      const f = b.frames[i];
+      if (f.kind === "tachiai") { set(E, 30, sE); set(W, 70, sW); Sfx.push(0); continue; }
+      const shift = U.clamp(f.pos, -1.3, 1.3) * 15;
+      if (f.kind === "impact") { set(E, 44 + shift, sE); set(W, 56 + shift, sW); Sfx.clash(0); continue; }
+      if (f.kind === "out" || f.kind === "throwdown") {
+        const eastWon = f.win;
+        const fallen = eastWon ? W : E;
+        const stand = eastWon ? E : W;
+        fallen.classList.add("fallen");
+        if (f.kind === "throwdown") {
+          set(fallen, eastWon ? 62 : 38, eastWon ? sW : sE, `rotate(${eastWon ? 80 : -80}deg)`);
+          set(stand, eastWon ? 46 : 54, eastWon ? sE : sW);
+        } else {
+          set(fallen, eastWon ? 92 : 8, eastWon ? sW : sE, `rotate(${eastWon ? 72 : -72}deg)`);
+          set(stand, eastWon ? 72 : 28, eastWon ? sE : sW);
+        }
+        Sfx.fall(0);
+        Sfx.cheer(0.15, 1.8, 0.22);
+        continue;
+      }
+      set(E, 44 + shift, sE); set(W, 56 + shift, sW);
+      Sfx.push(0);
+    }
+    boutState.shownFrame = b.frames.length;
+  }
+
+  function stepBout(delay) {
+    clearTimers();
+    later(() => {
+      const g = Game.get();
+      if (!g || g.screen !== "boutAnim") return;
+      const b = g.bout;
+      const st = Bout.advance(b);
+      flushLog();
+      applyFrames();
+      if (st === "choice") {
+        const slot = document.getElementById("choice-slot");
+        if (slot) slot.innerHTML = UI.choiceHTML(b.pending);
+        return;
+      }
+      if (b.done) {
+        const slot = document.getElementById("bout-btn-slot");
+        if (slot) slot.innerHTML = `<button class="main aka" id="btn-boutdone">${b.torinaoshi ? "物言い" : "勝負あり"}</button>`;
+        return;
+      }
+      stepBout(reduce() ? 60 : 780);
+    }, delay);
+  }
+
+  function onChoice(key) {
+    const g = Game.get(), b = g.bout;
+    Bout.choose(b, key);
+    const slot = document.getElementById("choice-slot");
+    if (slot) slot.innerHTML = "";
+    flushLog();
+    stepBout(reduce() ? 60 : 420);
+  }
+
+  /* ================= 入力 ================= */
+
+  app.addEventListener("click", (e) => {
+    const g = Game.get();
+
+    // 演出中はタップで飛ばす
+    if (g && g.screen === "keikoAnim") { toEat(); return; }
+    if (g && g.screen === "eatAnim") { finishDay(); return; }
+
+    const target = e.target;
+    const opt = target.closest(".opt");
+    const button = target.closest("button");
+    const id = button ? button.id : null;
+
+    if (opt && opt.dataset.choice) { Sfx.tap(); onChoice(opt.dataset.choice); return; }
+    if (opt && opt.dataset.sel) { Sfx.tap(); g.sel[opt.dataset.sel] = opt.dataset.key; render(); return; }
+    if (opt && opt.dataset.create) {
+      Sfx.tap();
+      draft[opt.dataset.create] = opt.dataset.key;
+      const input = document.getElementById("in-name");
+      if (input) draft.name = input.value.trim() || draft.name;
+      render();
+      return;
+    }
+    if (button && button.dataset.bz != null) { g.overlay = { kind: "banzuke", div: Number(button.dataset.bz) }; render(); return; }
+    if (!id) return;
+    Sfx.tap();
+    Sfx.resume();
+
+    switch (id) {
+      /* --- タイトル --- */
+      case "btn-newgame": draft = newDraft(); Game.set(null); startCreate(); return;
+      case "btn-continue-save": {
+        const g2 = Game.load();
+        if (g2) { render(); } else { alert("保存された記録が読めなかった。"); }
+        return;
+      }
+      case "btn-hof": showOverlayNoGame("hof"); return;
+
+      /* --- 入門 --- */
+      case "btn-rollname": {
+        draft.name = R.makeShikona();
+        render(); return;
+      }
+      case "btn-back-title": Game.set(null); render(); return;
+      case "btn-enter": {
+        const input = document.getElementById("in-name");
+        if (input) draft.name = (input.value || "").trim().slice(0, 8) || draft.name;
+        Game.newGame(draft);
+        Sfx.open();
+        render();
+        return;
+      }
+
+      /* --- 稽古 --- */
+      case "btn-endday": if (Game.commitDay()) render(); return;
+      case "btn-endday-x3": repeatDays(3); return;
+      case "btn-closeevent": Game.closeEvent(); render(); return;
+
+      /* --- 本場所 --- */
+      case "btn-startbasho": Sfx.open(); Game.advanceDay(); render(); return;
+      case "btn-fight": if (Game.beginBout()) render(); return;
+      case "btn-boutdone": {
+        const b = Game.get().bout;
+        if (b && b._playoff) Game.resolvePlayoffBout(); else Game.resolveBout();
+        render(); return;
+      }
+      case "btn-nextday": Game.afterBout(); render(); return;
+      case "btn-withdraw":
+        if (confirm("休場すると、残りの取組はすべて不戦敗となる。よろしいか。")) { Game.withdraw(); render(); }
+        return;
+      case "btn-playoff": Game.beginPlayoff(); render(); return;
+      case "btn-banzuke": Game.applyBanzuke(); announceBanzuke(); render(); return;
+      case "btn-nextbasho": Game.nextBasho(); render(); return;
+
+      /* --- 引退・終幕 --- */
+      case "btn-retire":
+        if (confirm("髷を落とし、土俵を降りる。よろしいか。")) { Game.retire(Game.get().forceRetire); Sfx.sad(); render(); }
+        return;
+      case "btn-title": Game.set(null); render(); return;
+
+      /* --- 重ね画面 --- */
+      case "nav-banzuke": g.overlay = { kind: "banzuke", div: g.player.rank.div }; render(); return;
+      case "nav-records": g.overlay = { kind: "records" }; render(); return;
+      case "nav-menu": g.overlay = { kind: "menu" }; render(); return;
+      case "nav-sound": Sfx.toggle(); syncSound(); render(); return;
+      case "ov-close": g.overlay = null; render(); return;
+      case "btn-save": Game.save(); flash("保存した"); return;
+      case "btn-quit-title": Game.save(); Game.set(null); render(); return;
+      default: return;
+    }
+  });
+
+  // 重ね画面の外側をタップで閉じる
+  app.addEventListener("click", (e) => {
+    const g = Game.get();
+    if (g && g.overlay && e.target.id === "overlay") { g.overlay = null; render(); }
+  });
+
+  /** 入門画面へ（ゲーム未生成のまま描画するための仮状態）。 */
+  function startCreate() {
+    Game.set({ screen: "create", overlay: null, sel: {}, flags: {} });
+    const g = Game.get();
+    Object.defineProperty(g, "player", { get: () => null, configurable: true });
+    render();
+  }
+
+  function showOverlayNoGame(kind) {
+    Game.set({ screen: "title", overlay: { kind }, sel: {}, flags: {} });
+    render();
+  }
+
+  /** 同じ献立で数日まとめて進める。 */
+  function repeatDays(times) {
+    const g = Game.get();
+    const keep = { train: g.sel.train, chanko: g.sel.chanko, amount: g.sel.amount };
+    for (let i = 0; i < times; i++) {
+      g.sel.train = keep.train; g.sel.chanko = keep.chanko; g.sel.amount = keep.amount;
+      if (!Game.commitDay()) break;
+      Game.applyDay();
+      const now = Game.get();
+      if (now.screen !== "keiko") break;
+    }
+    if (Game.get().screen === "keiko") { g.sel.train = keep.train; g.sel.chanko = keep.chanko; }
+    Sfx.gain();
+    render();
+  }
+
+  function announceBanzuke() {
+    const n = Game.get().notes;
+    if (!n) return;
+    if (n.newYokozuna || n.newOzeki || n.newSekitori) Sfx.fanfare();
+    else if (n.demoted || n.lostSekitori) Sfx.sad();
+    else Sfx.ki(0);
+  }
+
+  function flash(text) {
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = text;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1600);
+  }
+
+  /* ---------- 音のオンオフ ---------- */
+  const soundBtn = document.createElement("button");
+  soundBtn.id = "sound-btn";
+  soundBtn.textContent = "♪";
+  soundBtn.title = "音のオン／オフ";
+  soundBtn.addEventListener("click", () => { Sfx.toggle(); syncSound(); });
+  document.body.appendChild(soundBtn);
+
+  /** 音ボタンの見た目を合わせる。ヘッダのある画面では浮きボタンを隠す。 */
+  function syncSound() {
+    const on = Sfx.isOn();
+    soundBtn.textContent = on ? "♪" : "✕";
+    soundBtn.classList.toggle("off", !on);
+    const g = Game.get();
+    const noHeader = !g || g.screen === "title" || g.screen === "create";
+    soundBtn.style.display = noHeader ? "" : "none";
+  }
+  SUMO.syncSound = syncSound;
+
+  /* ---------- 起動 ---------- */
+  Game.set(null);
+  render();
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+</body>
+</html>
